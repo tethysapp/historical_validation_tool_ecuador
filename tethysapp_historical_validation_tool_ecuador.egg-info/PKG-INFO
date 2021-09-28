@@ -1,0 +1,11 @@
+Metadata-Version: 1.0
+Name: tethysapp-historical-validation-tool-ecuador
+Version: 1.0
+Summary: This app evaluates the accuracy for the historical streamflow values obtained from Streamflow Prediction Tool in Ecuador.
+Home-page: UNKNOWN
+Author: Jorge Luis Sanchez-Lozano
+Author-email: jorgessanchez7@gmail.com
+License: UNKNOWN
+Description: UNKNOWN
+Keywords: "Hydrology","Time Series","Bias Correction","Hydrostats","GEOGloWS","Historical Validation Tool"
+Platform: UNKNOWN

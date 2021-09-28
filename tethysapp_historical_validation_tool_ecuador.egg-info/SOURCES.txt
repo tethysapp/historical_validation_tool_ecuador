@@ -1,0 +1,12 @@
+setup.py
+tethysapp/historical_validation_tool_ecuador/__init__.py
+tethysapp/historical_validation_tool_ecuador/app.py
+tethysapp/historical_validation_tool_ecuador/controllers.py
+tethysapp/historical_validation_tool_ecuador/handoff.py
+tethysapp/historical_validation_tool_ecuador/tests/__init__.py
+tethysapp/historical_validation_tool_ecuador/tests/tests.py
+tethysapp_historical_validation_tool_ecuador.egg-info/PKG-INFO
+tethysapp_historical_validation_tool_ecuador.egg-info/SOURCES.txt
+tethysapp_historical_validation_tool_ecuador.egg-info/dependency_links.txt
+tethysapp_historical_validation_tool_ecuador.egg-info/not-zip-safe
+tethysapp_historical_validation_tool_ecuador.egg-info/top_level.txt
