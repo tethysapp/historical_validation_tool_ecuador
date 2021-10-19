@@ -2,6 +2,7 @@ import datetime as dt
 import io
 import os
 import traceback
+import sys
 from csv import writer as csv_writer
 
 import geoglows
@@ -25,24 +26,6 @@ from hs_restclient import HydroShare, HydroShareAuthBasic
 from .app import HistoricalValidationToolEcuador as app
 
 import time
-
-## global values ##
-watershed = 'none'
-subbasin = 'none'
-comid = 'none'
-codEstacion = 'none'
-nomEstacion = 'none'
-s = None
-simulated_df = pd.DataFrame([(dt.datetime(1980, 1, 1, 0, 0), 0)], columns=['Datetime', 'Simulated Streamflow'])
-simulated_df.set_index('Datetime', inplace=True)
-observed_df = pd.DataFrame([(dt.datetime(1980, 1, 1, 0, 0), 0)], columns=['Datetime', 'Simulated Streamflow'])
-observed_df.set_index('Datetime', inplace=True)
-corrected_df = pd.DataFrame([(dt.datetime(1980, 1, 1, 0, 0), 0)], columns=['Datetime', 'Simulated Streamflow'])
-corrected_df.set_index('Datetime', inplace=True)
-forecast_df = pd.DataFrame({'A': []})
-fixed_stats = None
-forecast_record = None
-fixed_records = None
 
 
 def home(request):
@@ -127,41 +110,24 @@ def get_popup_response(request):
 
     start_time = time.time()
 
-    get_data = request.GET
+    observed_data_path_file = os.path.join(app.get_app_workspace().path, 'observed_data.json')
+    simulated_data_path_file = os.path.join(app.get_app_workspace().path, 'simulated_data.json')
+    corrected_data_path_file = os.path.join(app.get_app_workspace().path, 'corrected_data.json')
+    forecast_data_path_file = os.path.join(app.get_app_workspace().path, 'forecast_data.json')
+
+    f = open(observed_data_path_file, 'w')
+    f.close()
+    f2 = open(simulated_data_path_file, 'w')
+    f2.close()
+    f3 = open(corrected_data_path_file, 'w')
+    f3.close()
+    f4 = open(forecast_data_path_file, 'w')
+    f4.close()
+
     return_obj = {}
 
-    global watershed
-    global subbasin
-    global comid
-    global codEstacion
-    global nomEstacion
-    global s
-    global simulated_df
-    global observed_df
-    global corrected_df
-    global forecast_df
-    global fixed_stats
-    global forecast_record
-    global fixed_records
-
-    watershed = 'none'
-    subbasin = 'none'
-    comid = 'none'
-    codEstacion = 'none'
-    nomEstacion = 'none'
-    s = None
-    simulated_df = pd.DataFrame([(dt.datetime(1980, 1, 1, 0, 0), 0)], columns=['Datetime', 'Simulated Streamflow'])
-    simulated_df.set_index('Datetime', inplace=True)
-    observed_df = pd.DataFrame([(dt.datetime(1980, 1, 1, 0, 0), 0)], columns=['Datetime', 'Simulated Streamflow'])
-    observed_df.set_index('Datetime', inplace=True)
-    corrected_df = pd.DataFrame([(dt.datetime(1980, 1, 1, 0, 0), 0)], columns=['Datetime', 'Simulated Streamflow'])
-    corrected_df.set_index('Datetime', inplace=True)
-    forecast_df = pd.DataFrame({'A': []})
-    fixed_stats = None
-    forecast_record = None
-    fixed_records = None
-
     try:
+        get_data = request.GET
         # get station attributes
         watershed = get_data['watershed']
         subbasin = get_data['subbasin']
@@ -176,6 +142,7 @@ def get_popup_response(request):
         hs.setAccessRules(resource_id, public=True)
 
         url = 'https://www.hydroshare.org/resource/{0}/data/contents/{1}.csv'.format(resource_id, codEstacion)
+
         s = requests.get(url, verify=False).content
         df = pd.read_csv(io.StringIO(s.decode('utf-8')), index_col=0)
         df.index = pd.to_datetime(df.index)
@@ -193,13 +160,42 @@ def get_popup_response(request):
 
         print("finished get_popup_response")
 
+        observed_data_file_path = os.path.join(app.get_app_workspace().path, 'observed_data.json')
+        observed_df.reset_index(level=0, inplace=True)
+        observed_df['index'] = observed_df['index'].dt.strftime('%Y-%m-%d')
+        observed_df.set_index('index', inplace=True)
+        observed_df.index = pd.to_datetime(observed_df.index)
+        observed_df.index.name = 'datetime'
+        observed_df.to_json(observed_data_file_path, orient='columns')
+
+        '''Get Simulated Data'''
+        simulated_df = geoglows.streamflow.historic_simulation(comid, forcing='era_5', return_format='csv')
+        # Removing Negative Values
+        simulated_df[simulated_df < 0] = 0
+        simulated_df.index = pd.to_datetime(simulated_df.index)
+        simulated_df.index = simulated_df.index.to_series().dt.strftime("%Y-%m-%d")
+        simulated_df.index = pd.to_datetime(simulated_df.index)
+        simulated_df = pd.DataFrame(data=simulated_df.iloc[:, 0].values, index=simulated_df.index, columns=['Simulated Streamflow'])
+
+        simulated_data_file_path = os.path.join(app.get_app_workspace().path, 'simulated_data.json')
+        simulated_df.reset_index(level=0, inplace=True)
+        simulated_df['datetime'] = simulated_df['datetime'].dt.strftime('%Y-%m-%d')
+        simulated_df.set_index('datetime', inplace=True)
+        simulated_df.index = pd.to_datetime(simulated_df.index)
+        simulated_df.index.name = 'Datetime'
+        simulated_df.to_json(simulated_data_file_path)
+
         print("--- %s seconds getpopup ---" % (time.time() - start_time))
 
         return JsonResponse({})
 
     except Exception as e:
-        print(str(e))
-        return JsonResponse({'error': 'No data found for the selected station.'})
+        exc_type, exc_obj, exc_tb = sys.exc_info()
+        print("error: " + str(e))
+        print("line: " + str(exc_tb.tb_lineno))
+        return JsonResponse({
+            'error': f'{"error: " + str(e), "line: " + str(exc_tb.tb_lineno)}',
+        })
 
 
 def get_hydrographs(request):
@@ -207,28 +203,38 @@ def get_hydrographs(request):
     Get observed data from csv files in Hydroshare
     Get historic simulations from ERA Interim
     """
-    get_data = request.GET
-    global codEstacion
-    global nomEstacion
-    global simulated_df
-    global observed_df
-    global corrected_df
 
     start_time = time.time()
 
     try:
+        get_data = request.GET
+        watershed = get_data['watershed']
+        subbasin = get_data['subbasin']
+        comid = get_data['streamcomid']
+        codEstacion = get_data['stationcode']
+        nomEstacion = get_data['stationname']
+
+        '''Get Observed Data'''
+        observed_data_file_path = os.path.join(app.get_app_workspace().path, 'observed_data.json')
+        observed_df = pd.read_json(observed_data_file_path, convert_dates=True)
+        observed_df.index = pd.to_datetime(observed_df.index)
+        observed_df.sort_index(inplace=True, ascending=True)
 
         '''Get Simulated Data'''
-        simulated_df = geoglows.streamflow.historic_simulation(comid, forcing='era_5', return_format='csv')
-        # Removing Negative Values
-        simulated_df[simulated_df < 0] = 0
-        simulated_df.index = simulated_df.index.to_series().dt.strftime("%Y-%m-%d")
+        simulated_data_file_path = os.path.join(app.get_app_workspace().path, 'simulated_data.json')
+        simulated_df = pd.read_json(simulated_data_file_path, convert_dates=True)
         simulated_df.index = pd.to_datetime(simulated_df.index)
-        simulated_df = pd.DataFrame(data=simulated_df.iloc[:, 0].values, index=simulated_df.index, columns=['Simulated Streamflow'])
+        simulated_df.sort_index(inplace=True, ascending=True)
 
-        '''Correct the Bias in Sumulation'''
-
+        '''Correct the Bias in Simulation'''
         corrected_df = geoglows.bias.correct_historical(simulated_df, observed_df)
+        corrected_data_file_path = os.path.join(app.get_app_workspace().path, 'corrected_data.json')
+        corrected_df.reset_index(level=0, inplace=True)
+        corrected_df['index'] = corrected_df['index'].dt.strftime('%Y-%m-%d')
+        corrected_df.set_index('index', inplace=True)
+        corrected_df.index = pd.to_datetime(corrected_df.index)
+        corrected_df.index.name = 'Datetime'
+        corrected_df.to_json(corrected_data_file_path)
 
         '''Plotting Data'''
         observed_Q = go.Scatter(x=observed_df.index, y=observed_df.iloc[:, 0].values, name='Observed', )
@@ -250,9 +256,14 @@ def get_hydrographs(request):
 
         return render(request, 'historical_validation_tool_ecuador/gizmo_ajax.html', context)
 
+
     except Exception as e:
-        print(str(e))
-        return JsonResponse({'error': 'No data found for the selected station.'})
+        exc_type, exc_obj, exc_tb = sys.exc_info()
+        print("error: " + str(e))
+        print("line: " + str(exc_tb.tb_lineno))
+        return JsonResponse({
+            'error': f'{"error: " + str(e), "line: " + str(exc_tb.tb_lineno)}',
+        })
 
 
 def get_dailyAverages(request):
@@ -260,16 +271,34 @@ def get_dailyAverages(request):
     Get observed data from csv files in Hydroshare
     Get historic simulations from ERA Interim
     """
-    get_data = request.GET
-    global codEstacion
-    global nomEstacion
-    global simulated_df
-    global observed_df
-    global corrected_df
 
     start_time = time.time()
 
     try:
+        get_data = request.GET
+        watershed = get_data['watershed']
+        subbasin = get_data['subbasin']
+        comid = get_data['streamcomid']
+        codEstacion = get_data['stationcode']
+        nomEstacion = get_data['stationname']
+
+        '''Get Observed Data'''
+        observed_data_file_path = os.path.join(app.get_app_workspace().path, 'observed_data.json')
+        observed_df = pd.read_json(observed_data_file_path,convert_dates=True)
+        observed_df.index = pd.to_datetime(observed_df.index)
+        observed_df.sort_index(inplace=True, ascending=True)
+
+        '''Get Simulated Data'''
+        simulated_data_file_path = os.path.join(app.get_app_workspace().path, 'simulated_data.json')
+        simulated_df = pd.read_json(simulated_data_file_path, convert_dates=True)
+        simulated_df.index = pd.to_datetime(simulated_df.index)
+        simulated_df.sort_index(inplace=True, ascending=True)
+
+        '''Get Bias Corrected Data'''
+        corrected_data_file_path = os.path.join(app.get_app_workspace().path, 'corrected_data.json')
+        corrected_df = pd.read_json(corrected_data_file_path,convert_dates=True)
+        corrected_df.index = pd.to_datetime(corrected_df.index)
+        corrected_df.sort_index(inplace=True, ascending=True)
 
         '''Merge Data'''
 
@@ -305,9 +334,14 @@ def get_dailyAverages(request):
 
         return render(request, 'historical_validation_tool_ecuador/gizmo_ajax.html', context)
 
+
     except Exception as e:
-        print(str(e))
-        return JsonResponse({'error': 'No data found for the selected station.'})
+        exc_type, exc_obj, exc_tb = sys.exc_info()
+        print("error: " + str(e))
+        print("line: " + str(exc_tb.tb_lineno))
+        return JsonResponse({
+            'error': f'{"error: " + str(e), "line: " + str(exc_tb.tb_lineno)}',
+        })
 
 
 def get_monthlyAverages(request):
@@ -315,16 +349,34 @@ def get_monthlyAverages(request):
     Get observed data from csv files in Hydroshare
     Get historic simulations from ERA Interim
     """
-    get_data = request.GET
-    global codEstacion
-    global nomEstacion
-    global simulated_df
-    global observed_df
-    global corrected_df
 
     start_time = time.time()
 
     try:
+        get_data = request.GET
+        watershed = get_data['watershed']
+        subbasin = get_data['subbasin']
+        comid = get_data['streamcomid']
+        codEstacion = get_data['stationcode']
+        nomEstacion = get_data['stationname']
+
+        '''Get Observed Data'''
+        observed_data_file_path = os.path.join(app.get_app_workspace().path, 'observed_data.json')
+        observed_df = pd.read_json(observed_data_file_path,convert_dates=True)
+        observed_df.index = pd.to_datetime(observed_df.index)
+        observed_df.sort_index(inplace=True, ascending=True)
+
+        '''Get Simulated Data'''
+        simulated_data_file_path = os.path.join(app.get_app_workspace().path, 'simulated_data.json')
+        simulated_df = pd.read_json(simulated_data_file_path, convert_dates=True)
+        simulated_df.index = pd.to_datetime(simulated_df.index)
+        simulated_df.sort_index(inplace=True, ascending=True)
+
+        '''Get Bias Corrected Data'''
+        corrected_data_file_path = os.path.join(app.get_app_workspace().path, 'corrected_data.json')
+        corrected_df = pd.read_json(corrected_data_file_path,convert_dates=True)
+        corrected_df.index = pd.to_datetime(corrected_df.index)
+        corrected_df.sort_index(inplace=True, ascending=True)
 
         '''Merge Data'''
 
@@ -361,9 +413,14 @@ def get_monthlyAverages(request):
 
         return render(request, 'historical_validation_tool_ecuador/gizmo_ajax.html', context)
 
+
     except Exception as e:
-        print(str(e))
-        return JsonResponse({'error': 'No data found for the selected station.'})
+        exc_type, exc_obj, exc_tb = sys.exc_info()
+        print("error: " + str(e))
+        print("line: " + str(exc_tb.tb_lineno))
+        return JsonResponse({
+            'error': f'{"error: " + str(e), "line: " + str(exc_tb.tb_lineno), "sim_ini: " + str(simulated_df.index[0]), "sim_end: " + str(simulated_df.index[-1]), "obs_ini: " + str(observed_df.index[0]), "obs_end: " + str(observed_df.index[-1])}',
+        })
 
 
 def get_scatterPlot(request):
@@ -371,16 +428,34 @@ def get_scatterPlot(request):
     Get observed data from csv files in Hydroshare
     Get historic simulations from ERA Interim
     """
-    get_data = request.GET
-    global codEstacion
-    global nomEstacion
-    global simulated_df
-    global observed_df
-    global corrected_df
 
     start_time = time.time()
 
     try:
+        get_data = request.GET
+        watershed = get_data['watershed']
+        subbasin = get_data['subbasin']
+        comid = get_data['streamcomid']
+        codEstacion = get_data['stationcode']
+        nomEstacion = get_data['stationname']
+
+        '''Get Observed Data'''
+        observed_data_file_path = os.path.join(app.get_app_workspace().path, 'observed_data.json')
+        observed_df = pd.read_json(observed_data_file_path,convert_dates=True)
+        observed_df.index = pd.to_datetime(observed_df.index)
+        observed_df.sort_index(inplace=True, ascending=True)
+
+        '''Get Simulated Data'''
+        simulated_data_file_path = os.path.join(app.get_app_workspace().path, 'simulated_data.json')
+        simulated_df = pd.read_json(simulated_data_file_path, convert_dates=True)
+        simulated_df.index = pd.to_datetime(simulated_df.index)
+        simulated_df.sort_index(inplace=True, ascending=True)
+
+        '''Get Bias Corrected Data'''
+        corrected_data_file_path = os.path.join(app.get_app_workspace().path, 'corrected_data.json')
+        corrected_df = pd.read_json(corrected_data_file_path,convert_dates=True)
+        corrected_df.index = pd.to_datetime(corrected_df.index)
+        corrected_df.sort_index(inplace=True, ascending=True)
 
         '''Merge Data'''
 
@@ -457,9 +532,14 @@ def get_scatterPlot(request):
 
         return render(request, 'historical_validation_tool_ecuador/gizmo_ajax.html', context)
 
+
     except Exception as e:
-        print(str(e))
-        return JsonResponse({'error': 'No data found for the selected station.'})
+        exc_type, exc_obj, exc_tb = sys.exc_info()
+        print("error: " + str(e))
+        print("line: " + str(exc_tb.tb_lineno))
+        return JsonResponse({
+            'error': f'{"error: " + str(e), "line: " + str(exc_tb.tb_lineno), "sim_ini: " + str(simulated_df.index[0]), "sim_end: " + str(simulated_df.index[-1]), "obs_ini: " + str(observed_df.index[0]), "obs_end: " + str(observed_df.index[-1])}',
+        })
 
 
 def get_scatterPlotLogScale(request):
@@ -467,16 +547,36 @@ def get_scatterPlotLogScale(request):
     Get observed data from csv files in Hydroshare
     Get historic simulations from ERA Interim
     """
-    get_data = request.GET
-    global codEstacion
-    global nomEstacion
-    global simulated_df
-    global observed_df
-    global corrected_df
 
     start_time = time.time()
 
     try:
+
+        get_data = request.GET
+        watershed = get_data['watershed']
+        subbasin = get_data['subbasin']
+        comid = get_data['streamcomid']
+        codEstacion = get_data['stationcode']
+        nomEstacion = get_data['stationname']
+
+        '''Get Observed Data'''
+        observed_data_file_path = os.path.join(app.get_app_workspace().path, 'observed_data.json')
+        observed_df = pd.read_json(observed_data_file_path, convert_dates=True)
+        observed_df.index = pd.to_datetime(observed_df.index)
+        observed_df.sort_index(inplace=True, ascending=True)
+
+        '''Get Simulated Data'''
+        simulated_data_file_path = os.path.join(app.get_app_workspace().path, 'simulated_data.json')
+        simulated_df = pd.read_json(simulated_data_file_path, convert_dates=True)
+        simulated_df.index = pd.to_datetime(simulated_df.index)
+        simulated_df.sort_index(inplace=True, ascending=True)
+
+        '''Get Bias Corrected Data'''
+        corrected_data_file_path = os.path.join(app.get_app_workspace().path, 'corrected_data.json')
+        corrected_df = pd.read_json(corrected_data_file_path, convert_dates=True)
+        corrected_df.index = pd.to_datetime(corrected_df.index)
+        corrected_df.sort_index(inplace=True, ascending=True)
+
         '''Merge Data'''
 
         merged_df = hd.merge_data(sim_df=simulated_df, obs_df=observed_df)
@@ -526,9 +626,14 @@ def get_scatterPlotLogScale(request):
 
         return render(request, 'historical_validation_tool_ecuador/gizmo_ajax.html', context)
 
+
     except Exception as e:
-        print(str(e))
-        return JsonResponse({'error': 'No data found for the selected station.'})
+        exc_type, exc_obj, exc_tb = sys.exc_info()
+        print("error: " + str(e))
+        print("line: " + str(exc_tb.tb_lineno))
+        return JsonResponse({
+            'error': f'{"error: " + str(e), "line: " + str(exc_tb.tb_lineno), "sim_ini: " + str(simulated_df.index[0]), "sim_end: " + str(simulated_df.index[-1]), "obs_ini: " + str(observed_df.index[0]), "obs_end: " + str(observed_df.index[-1])}',
+        })
 
 
 def get_volumeAnalysis(request):
@@ -536,16 +641,35 @@ def get_volumeAnalysis(request):
     Get observed data from csv files in Hydroshare
     Get historic simulations from ERA Interim
     """
-    get_data = request.GET
-    global codEstacion
-    global nomEstacion
-    global simulated_df
-    global observed_df
-    global corrected_df
 
     start_time = time.time()
 
     try:
+        get_data = request.GET
+        watershed = get_data['watershed']
+        subbasin = get_data['subbasin']
+        comid = get_data['streamcomid']
+        codEstacion = get_data['stationcode']
+        nomEstacion = get_data['stationname']
+
+        '''Get Observed Data'''
+        observed_data_file_path = os.path.join(app.get_app_workspace().path, 'observed_data.json')
+        observed_df = pd.read_json(observed_data_file_path, convert_dates=True)
+        observed_df.index = pd.to_datetime(observed_df.index)
+        observed_df.sort_index(inplace=True, ascending=True)
+
+        '''Get Simulated Data'''
+        simulated_data_file_path = os.path.join(app.get_app_workspace().path, 'simulated_data.json')
+        simulated_df = pd.read_json(simulated_data_file_path, convert_dates=True)
+        simulated_df.index = pd.to_datetime(simulated_df.index)
+        simulated_df.sort_index(inplace=True, ascending=True)
+
+        '''Get Bias Corrected Data'''
+        corrected_data_file_path = os.path.join(app.get_app_workspace().path, 'corrected_data.json')
+        corrected_df = pd.read_json(corrected_data_file_path, convert_dates=True)
+        corrected_df.index = pd.to_datetime(corrected_df.index)
+        corrected_df.sort_index(inplace=True, ascending=True)
+
         '''Merge Data'''
 
         merged_df = hd.merge_data(sim_df=simulated_df, obs_df=observed_df)
@@ -602,22 +726,47 @@ def get_volumeAnalysis(request):
 
         return render(request, 'historical_validation_tool_ecuador/gizmo_ajax.html', context)
 
+
     except Exception as e:
-        print(str(e))
-        return JsonResponse({'error': 'No data found for the selected station.'})
+        exc_type, exc_obj, exc_tb = sys.exc_info()
+        print("error: " + str(e))
+        print("line: " + str(exc_tb.tb_lineno))
+        return JsonResponse({
+            'error': f'{"error: " + str(e), "line: " + str(exc_tb.tb_lineno), "sim_ini: " + str(simulated_df.index[0]), "sim_end: " + str(simulated_df.index[-1]), "obs_ini: " + str(observed_df.index[0]), "obs_end: " + str(observed_df.index[-1])}',
+        })
 
 
 def volume_table_ajax(request):
-    """Calculates the volumes of the simulated and observed streamflow"""
-
-    get_data = request.GET
-    global simulated_df
-    global observed_df
-    global corrected_df
+    """Calculates the volumes of the simulated
+    and observed streamflow"""
 
     start_time = time.time()
 
     try:
+        get_data = request.GET
+        watershed = get_data['watershed']
+        subbasin = get_data['subbasin']
+        comid = get_data['streamcomid']
+        codEstacion = get_data['stationcode']
+        nomEstacion = get_data['stationname']
+
+        '''Get Observed Data'''
+        observed_data_file_path = os.path.join(app.get_app_workspace().path, 'observed_data.json')
+        observed_df = pd.read_json(observed_data_file_path, convert_dates=True)
+        observed_df.index = pd.to_datetime(observed_df.index)
+        observed_df.sort_index(inplace=True, ascending=True)
+
+        '''Get Simulated Data'''
+        simulated_data_file_path = os.path.join(app.get_app_workspace().path, 'simulated_data.json')
+        simulated_df = pd.read_json(simulated_data_file_path, convert_dates=True)
+        simulated_df.index = pd.to_datetime(simulated_df.index)
+        simulated_df.sort_index(inplace=True, ascending=True)
+
+        '''Get Bias Corrected Data'''
+        corrected_data_file_path = os.path.join(app.get_app_workspace().path, 'corrected_data.json')
+        corrected_df = pd.read_json(corrected_data_file_path, convert_dates=True)
+        corrected_df.index = pd.to_datetime(corrected_df.index)
+        corrected_df.sort_index(inplace=True, ascending=True)
 
         '''Merge Data'''
 
@@ -645,20 +794,27 @@ def volume_table_ajax(request):
 
         return JsonResponse(resp)
 
+
     except Exception as e:
-        print(str(e))
-        return JsonResponse({'error': 'No data found for the selected station.'})
+        exc_type, exc_obj, exc_tb = sys.exc_info()
+        print("error: " + str(e))
+        print("line: " + str(exc_tb.tb_lineno))
+        return JsonResponse({
+            'error': f'{"error: " + str(e), "line: " + str(exc_tb.tb_lineno), "sim_ini: " + str(simulated_df.index[0]), "sim_end: " + str(simulated_df.index[-1]), "obs_ini: " + str(observed_df.index[0]), "obs_end: " + str(observed_df.index[-1])}',
+        })
 
 
 def make_table_ajax(request):
-    get_data = request.GET
-    global simulated_df
-    global observed_df
-    global corrected_df
 
     start_time = time.time()
 
     try:
+        get_data = request.GET
+        watershed = get_data['watershed']
+        subbasin = get_data['subbasin']
+        comid = get_data['streamcomid']
+        codEstacion = get_data['stationcode']
+        nomEstacion = get_data['stationname']
 
         # Indexing the metrics to get the abbreviations
         selected_metric_abbr = get_data.getlist("metrics[]", None)
@@ -723,6 +879,24 @@ def make_table_ajax(request):
             d1_p_x_bar_p = None
             extra_param_dict['d1_p_x_bar_p'] = d1_p_x_bar_p
 
+        '''Get Observed Data'''
+        observed_data_file_path = os.path.join(app.get_app_workspace().path, 'observed_data.json')
+        observed_df = pd.read_json(observed_data_file_path, convert_dates=True)
+        observed_df.index = pd.to_datetime(observed_df.index)
+        observed_df.sort_index(inplace=True, ascending=True)
+
+        '''Get Simulated Data'''
+        simulated_data_file_path = os.path.join(app.get_app_workspace().path, 'simulated_data.json')
+        simulated_df = pd.read_json(simulated_data_file_path, convert_dates=True)
+        simulated_df.index = pd.to_datetime(simulated_df.index)
+        simulated_df.sort_index(inplace=True, ascending=True)
+
+        '''Get Bias Corrected Data'''
+        corrected_data_file_path = os.path.join(app.get_app_workspace().path, 'corrected_data.json')
+        corrected_df = pd.read_json(corrected_data_file_path, convert_dates=True)
+        corrected_df.index = pd.to_datetime(corrected_df.index)
+        corrected_df.sort_index(inplace=True, ascending=True)
+
         '''Merge Data'''
         merged_df = hd.merge_data(sim_df=simulated_df, obs_df=observed_df)
         merged_df2 = hd.merge_data(sim_df=corrected_df, obs_df=observed_df)
@@ -783,9 +957,13 @@ def make_table_ajax(request):
 
         return HttpResponse(table_final_html)
 
-    except Exception:
-        traceback.print_exc()
-        return JsonResponse({'error': 'No data found for the selected station.'})
+    except Exception as e:
+        exc_type, exc_obj, exc_tb = sys.exc_info()
+        print("error: " + str(e))
+        print("line: " + str(exc_tb.tb_lineno))
+        return JsonResponse({
+            'error': f'{"error: " + str(e), "line: " + str(exc_tb.tb_lineno), "sim_ini: " + str(simulated_df.index[0]), "sim_end: " + str(simulated_df.index[-1]), "obs_ini: " + str(observed_df.index[0]), "obs_end: " + str(observed_df.index[-1])}',
+        })
 
 
 def get_units_title(unit_type):
@@ -799,17 +977,16 @@ def get_units_title(unit_type):
 
 
 def get_time_series(request):
-    get_data = request.GET
-    global comid
-    global codEstacion
-    global nomEstacion
-    global forecast_df
-    global forecast_record
 
     start_time = time.time()
 
     try:
-
+        get_data = request.GET
+        watershed = get_data['watershed']
+        subbasin = get_data['subbasin']
+        comid = get_data['streamcomid']
+        codEstacion = get_data['stationcode']
+        nomEstacion = get_data['stationname']
         startdate = get_data['startdate']
 
         '''Getting Forecast Stats'''
@@ -825,10 +1002,13 @@ def get_time_series(request):
         forecast_df.index = forecast_df.index.to_series().dt.strftime("%Y-%m-%d %H:%M:%S")
         forecast_df.index = pd.to_datetime(forecast_df.index)
 
+        forecast_data_file_path = os.path.join(app.get_app_workspace().path, 'forecast_data.json')
+        forecast_df.index.name = 'Datetime'
+        forecast_df.to_json(forecast_data_file_path)
+
         hydroviewer_figure = geoglows.plots.forecast_stats(stats=forecast_df, titles={'Station': nomEstacion + '-' + str(codEstacion), 'Reach ID': comid})
 
-        x_vals = (forecast_df.index[0], forecast_df.index[len(forecast_df.index) - 1],
-                  forecast_df.index[len(forecast_df.index) - 1], forecast_df.index[0])
+        x_vals = (forecast_df.index[0], forecast_df.index[len(forecast_df.index) - 1], forecast_df.index[len(forecast_df.index) - 1], forecast_df.index[0])
         max_visible = max(forecast_df.max())
 
         '''Getting forecast record'''
@@ -905,9 +1085,7 @@ def get_time_series(request):
             hydroviewer_figure.add_trace(template(f'10 Year: {r10}', (r10, r10, r25, r25), colors['10 Year']))
             hydroviewer_figure.add_trace(template(f'25 Year: {r25}', (r25, r25, r50, r50), colors['25 Year']))
             hydroviewer_figure.add_trace(template(f'50 Year: {r50}', (r50, r50, r100, r100), colors['50 Year']))
-            hydroviewer_figure.add_trace(template(f'100 Year: {r100}', (
-            r100, r100, max(r100 + r100 * 0.05, max_visible), max(r100 + r100 * 0.05, max_visible)),
-                                                  colors['100 Year']))
+            hydroviewer_figure.add_trace(template(f'100 Year: {r100}', ( r100, r100, max(r100 + r100 * 0.05, max_visible), max(r100 + r100 * 0.05, max_visible)), colors['100 Year']))
 
         except:
             print('There is no return periods for the desired stream')
@@ -923,26 +1101,45 @@ def get_time_series(request):
         return render(request, 'historical_validation_tool_ecuador/gizmo_ajax.html', context)
 
     except Exception as e:
-        print(str(e))
-        return JsonResponse(dict(error='No data found for the selected reach.'))
+        exc_type, exc_obj, exc_tb = sys.exc_info()
+        print("error: " + str(e))
+        print("line: " + str(exc_tb.tb_lineno))
+        return JsonResponse({
+            'error': f'{"error: " + str(e), "line: " + str(exc_tb.tb_lineno), "sim_ini: " + str(simulated_df.index[0]), "sim_end: " + str(simulated_df.index[-1]), "obs_ini: " + str(observed_df.index[0]), "obs_end: " + str(observed_df.index[-1])}',
+        })
 
 
 def get_time_series_bc(request):
-    get_data = request.GET
-    global comid
-    global codEstacion
-    global nomEstacion
-    global corrected_df
-    global forecast_df
-    global fixed_stats
-    global forecast_record
-    global fixed_records
 
     start_time = time.time()
 
     try:
 
+        get_data = request.GET
+        watershed = get_data['watershed']
+        subbasin = get_data['subbasin']
+        comid = get_data['streamcomid']
+        codEstacion = get_data['stationcode']
+        nomEstacion = get_data['stationname']
         startdate = get_data['startdate']
+
+        '''Get Observed Data'''
+        observed_data_file_path = os.path.join(app.get_app_workspace().path, 'observed_data.json')
+        observed_df = pd.read_json(observed_data_file_path, convert_dates=True)
+        observed_df.index = pd.to_datetime(observed_df.index)
+        observed_df.sort_index(inplace=True, ascending=True)
+
+        '''Get Simulated Data'''
+        simulated_data_file_path = os.path.join(app.get_app_workspace().path, 'simulated_data.json')
+        simulated_df = pd.read_json(simulated_data_file_path, convert_dates=True)
+        simulated_df.index = pd.to_datetime(simulated_df.index)
+        simulated_df.sort_index(inplace=True, ascending=True)
+
+        '''Get Bias Corrected Data'''
+        corrected_data_file_path = os.path.join(app.get_app_workspace().path, 'corrected_data.json')
+        corrected_df = pd.read_json(corrected_data_file_path, convert_dates=True)
+        corrected_df.index = pd.to_datetime(corrected_df.index)
+        corrected_df.sort_index(inplace=True, ascending=True)
 
         '''Getting Forecast Stats'''
         if startdate != '':
@@ -956,6 +1153,10 @@ def get_time_series_bc(request):
         forecast_ens[forecast_ens < 0] = 0
         forecast_ens.index = forecast_ens.index.to_series().dt.strftime("%Y-%m-%d %H:%M:%S")
         forecast_ens.index = pd.to_datetime(forecast_ens.index)
+
+        forecast_ens_file_path = os.path.join(app.get_app_workspace().path, 'forecast_ens.json')
+        forecast_ens.index.name = 'Datetime'
+        forecast_ens.to_json(forecast_ens_file_path)
 
         '''Get Forecasts Records'''
         forecast_record = geoglows.streamflow.forecast_records(comid)
@@ -995,9 +1196,12 @@ def get_time_series_bc(request):
 
         '''Correct Bias Forecasts'''
         corrected_ensembles = geoglows.bias.correct_forecast(forecast_ens, simulated_df, observed_df)
-
         corrected_ensembles = corrected_ensembles.multiply(min_factor_df, axis=0)
         corrected_ensembles = corrected_ensembles.multiply(max_factor_df, axis=0)
+
+        forecast_ens_bc_file_path = os.path.join(app.get_app_workspace().path, 'forecast_ens_bc.json')
+        corrected_ensembles.index.name = 'Datetime'
+        corrected_ensembles.to_json(forecast_ens_bc_file_path)
 
         ensemble = corrected_ensembles.copy()
         high_res_df = ensemble['ensemble_52_m^3/s'].to_frame()
@@ -1024,6 +1228,10 @@ def get_time_series_bc(request):
 
         fixed_stats = pd.concat([max_df, p75_df, mean_df, p25_df, min_df, high_res_df], axis=1)
 
+        forecast_data_bc_file_path = os.path.join(app.get_app_workspace().path, 'forecast_data_bc.json')
+        fixed_stats.index.name = 'Datetime'
+        fixed_stats.to_json(forecast_data_bc_file_path)
+
         hydroviewer_figure = geoglows.plots.forecast_stats(stats=fixed_stats, titles={'Station': nomEstacion + '-' + str(codEstacion), 'Reach ID': comid, 'bias_corrected': True})
 
         x_vals = (fixed_stats.index[0], fixed_stats.index[len(fixed_stats.index) - 1], fixed_stats.index[len(fixed_stats.index) - 1], fixed_stats.index[0])
@@ -1032,10 +1240,8 @@ def get_time_series_bc(request):
         '''Getting forecast record'''
 
         fixed_records = forecast_record.copy()
-        fixed_records = fixed_records.loc[
-            fixed_records.index >= pd.to_datetime(forecast_df.index[0] - dt.timedelta(days=8))]
-        fixed_records = fixed_records.loc[
-            fixed_records.index <= pd.to_datetime(forecast_df.index[0] + dt.timedelta(days=2))]
+        fixed_records = fixed_records.loc[fixed_records.index >= pd.to_datetime(forecast_ens.index[0] - dt.timedelta(days=8))]
+        fixed_records = fixed_records.loc[fixed_records.index <= pd.to_datetime(forecast_ens.index[0] + dt.timedelta(days=2))]
 
         '''Correct Bias Forecasts Records'''
         record_plot = geoglows.bias.correct_forecast(fixed_records, simulated_df, observed_df, use_month=-1)
@@ -1123,16 +1329,13 @@ def get_time_series_bc(request):
         r50 = int(rperiods.iloc[0]['return_period_50'])
         r100 = int(rperiods.iloc[0]['return_period_100'])
 
-        hydroviewer_figure.add_trace(
-            template('Return Periods', (r100 * 0.05, r100 * 0.05, r100 * 0.05, r100 * 0.05), 'rgba(0,0,0,0)',
-                     fill='none'))
+        hydroviewer_figure.add_trace(template('Return Periods', (r100 * 0.05, r100 * 0.05, r100 * 0.05, r100 * 0.05), 'rgba(0,0,0,0)', fill='none'))
         hydroviewer_figure.add_trace(template(f'2 Year: {r2}', (r2, r2, r5, r5), colors['2 Year']))
         hydroviewer_figure.add_trace(template(f'5 Year: {r5}', (r5, r5, r10, r10), colors['5 Year']))
         hydroviewer_figure.add_trace(template(f'10 Year: {r10}', (r10, r10, r25, r25), colors['10 Year']))
         hydroviewer_figure.add_trace(template(f'25 Year: {r25}', (r25, r25, r50, r50), colors['25 Year']))
         hydroviewer_figure.add_trace(template(f'50 Year: {r50}', (r50, r50, r100, r100), colors['50 Year']))
-        hydroviewer_figure.add_trace(template(f'100 Year: {r100}', (
-        r100, r100, max(r100 + r100 * 0.05, max_visible), max(r100 + r100 * 0.05, max_visible)), colors['100 Year']))
+        hydroviewer_figure.add_trace(template(f'100 Year: {r100}', (r100, r100, max(r100 + r100 * 0.05, max_visible), max(r100 + r100 * 0.05, max_visible)), colors['100 Year']))
 
         chart_obj = PlotlyView(hydroviewer_figure)
 
@@ -1145,16 +1348,21 @@ def get_time_series_bc(request):
         return render(request, 'historical_validation_tool_ecuador/gizmo_ajax.html', context)
 
     except Exception as e:
-        print(str(e))
-        return JsonResponse({'error': 'No data found for the selected reach.'})
+        exc_type, exc_obj, exc_tb = sys.exc_info()
+        print("error: " + str(e))
+        print("line: " + str(exc_tb.tb_lineno))
+        return JsonResponse({
+            'error': f'{"error: " + str(e), "line: " + str(exc_tb.tb_lineno), "sim_ini: " + str(simulated_df.index[0]), "sim_end: " + str(simulated_df.index[-1]), "obs_ini: " + str(observed_df.index[0]), "obs_end: " + str(observed_df.index[-1])}',
+        })
 
 
 def get_available_dates(request):
-    get_data = request.GET
 
-    global watershed
-    global subbasin
-    global comid
+    get_data = request.GET
+    watershed = get_data['watershed']
+    subbasin = get_data['subbasin']
+    comid = get_data['streamcomid']
+
     res = requests.get('https://geoglows.ecmwf.int/api/AvailableDates/?region=' + watershed + '-' + subbasin, verify=False)
 
     data = res.json()
@@ -1186,12 +1394,18 @@ def get_observed_discharge_csv(request):
     Get observed data from csv files in Hydroshare
     """
 
-    get_data = request.GET
-    global observed_df
-    global codEstacion
-    global nomEstacion
-
     try:
+        get_data = request.GET
+	    watershed = get_data['watershed']
+        subbasin = get_data['subbasin']
+        comid = get_data['streamcomid']
+        codEstacion = get_data['stationcode']
+        nomEstacion = get_data['stationname']
+        
+        observed_data_file_path = os.path.join(app.get_app_workspace().path, 'observed_data.json')
+        observed_df = pd.read_json(observed_data_file_path, convert_dates=True)
+        observed_df.index = pd.to_datetime(observed_df.index)
+        observed_df.sort_index(inplace=True, ascending=True)
 
         datesObservedDischarge = observed_df.index.tolist()
         observedDischarge = observed_df.iloc[:, 0].values
@@ -1211,21 +1425,33 @@ def get_observed_discharge_csv(request):
         return response
 
     except Exception as e:
-        print(str(e))
-        return JsonResponse({'error': 'An unknown error occurred while retrieving the Discharge Data.'})
+		exc_type, exc_obj, exc_tb = sys.exc_info()
+		print("error: " + str(e))
+		print("line: " + str(exc_tb.tb_lineno))
+
+		return JsonResponse({
+			'error': f'{"error: " + str(e), "line: " + str(exc_tb.tb_lineno)}',
+		})
 '''
 
 def get_simulated_discharge_csv(request):
     """
     Get historic simulations from ERA Interim
     """
-    get_data = request.GET
-    global comid
-    global codEstacion
-    global nomEstacion
-    global simulated_df
 
     try:
+        get_data = request.GET
+        watershed = get_data['watershed']
+        subbasin = get_data['subbasin']
+        comid = get_data['streamcomid']
+        codEstacion = get_data['stationcode']
+        nomEstacion = get_data['stationname']
+
+        '''Get Simulated Data'''
+        simulated_data_file_path = os.path.join(app.get_app_workspace().path, 'simulated_data.json')
+        simulated_df = pd.read_json(simulated_data_file_path, convert_dates=True)
+        simulated_df.index = pd.to_datetime(simulated_df.index)
+        simulated_df.sort_index(inplace=True, ascending=True)
 
         pairs = [list(a) for a in zip(simulated_df.index, simulated_df.iloc[:, 0])]
 
@@ -1241,8 +1467,12 @@ def get_simulated_discharge_csv(request):
         return response
 
     except Exception as e:
-        print(str(e))
-        return JsonResponse({'error': 'An unknown error occurred while retrieving the Discharge Data.'})
+        exc_type, exc_obj, exc_tb = sys.exc_info()
+        print("error: " + str(e))
+        print("line: " + str(exc_tb.tb_lineno))
+        return JsonResponse({
+            'error': f'{"error: " + str(e), "line: " + str(exc_tb.tb_lineno), "sim_ini: " + str(simulated_df.index[0]), "sim_end: " + str(simulated_df.index[-1]), "obs_ini: " + str(observed_df.index[0]), "obs_end: " + str(observed_df.index[-1])}',
+        })
 
 
 def get_simulated_bc_discharge_csv(request):
@@ -1250,27 +1480,35 @@ def get_simulated_bc_discharge_csv(request):
     Get historic simulations from ERA Interim
     """
 
-    get_data = request.GET
-    global comid
-    global codEstacion
-    global nomEstacion
-    global observed_df
-    global simulated_df
-    global corrected_df
-
     try:
 
+        get_data = request.GET
+        watershed = get_data['watershed']
+        subbasin = get_data['subbasin']
+        comid = get_data['streamcomid']
+        codEstacion = get_data['stationcode']
+        nomEstacion = get_data['stationname']
+
+        '''Get Bias Corrected Data'''
+        corrected_data_file_path = os.path.join(app.get_app_workspace().path, 'corrected_data.json')
+        corrected_df = pd.read_json(corrected_data_file_path, convert_dates=True)
+        corrected_df.index = pd.to_datetime(corrected_df.index)
+        corrected_df.sort_index(inplace=True, ascending=True)
+
         response = HttpResponse(content_type='text/csv')
-        response['Content-Disposition'] = 'attachment; filename=corrected_simulated_discharge_{0}.csv'.format(
-            codEstacion)
+        response['Content-Disposition'] = 'attachment; filename=corrected_simulated_discharge_{0}.csv'.format(codEstacion)
 
         corrected_df.to_csv(encoding='utf-8', header=True, path_or_buf=response)
 
         return response
 
     except Exception as e:
-        print(str(e))
-        return JsonResponse({'error': 'An unknown error occurred while retrieving the Discharge Data.'})
+        exc_type, exc_obj, exc_tb = sys.exc_info()
+        print("error: " + str(e))
+        print("line: " + str(exc_tb.tb_lineno))
+        return JsonResponse({
+            'error': f'{"error: " + str(e), "line: " + str(exc_tb.tb_lineno), "sim_ini: " + str(simulated_df.index[0]), "sim_end: " + str(simulated_df.index[-1]), "obs_ini: " + str(observed_df.index[0]), "obs_end: " + str(observed_df.index[-1])}',
+        })
 
 
 def get_forecast_data_csv(request):
@@ -1278,15 +1516,21 @@ def get_forecast_data_csv(request):
     Returns Forecast data as csv
     """""
 
-    get_data = request.GET
-    global watershed
-    global subbasin
-    global comid
-    global forecast_df
-
     try:
 
+        get_data = request.GET
+        watershed = get_data['watershed']
+        subbasin = get_data['subbasin']
+        comid = get_data['streamcomid']
+        codEstacion = get_data['stationcode']
+        nomEstacion = get_data['stationname']
         startdate = get_data['startdate']
+
+        '''Get Forecast Data'''
+        forecast_data_file_path = os.path.join(app.get_app_workspace().path, 'forecast_data.json')
+        forecast_df = pd.read_json(forecast_data_file_path, convert_dates=True)
+        forecast_df.index = pd.to_datetime(forecast_df.index)
+        forecast_df.sort_index(inplace=True, ascending=True)
 
         # Writing CSV
         response = HttpResponse(content_type='text/csv')
@@ -1297,8 +1541,50 @@ def get_forecast_data_csv(request):
         return response
 
     except Exception as e:
-        print(str(e))
-        return JsonResponse({'error': 'No forecast data found.'})
+        exc_type, exc_obj, exc_tb = sys.exc_info()
+        print("error: " + str(e))
+        print("line: " + str(exc_tb.tb_lineno))
+        return JsonResponse({
+            'error': f'{"error: " + str(e), "line: " + str(exc_tb.tb_lineno)}',
+        })
+
+
+def get_forecast_ensemble_data_csv(request):
+    """""
+    Returns Forecast data as csv
+    """""
+
+    get_data = request.GET
+
+    try:
+        #get station attributes
+        watershed = get_data['watershed']
+        subbasin = get_data['subbasin']
+        comid = get_data['streamcomid']
+        startdate = get_data['startdate']
+
+        '''Get Forecast Ensemble Data'''
+        forecast_ens_file_path = os.path.join(app.get_app_workspace().path, 'forecast_ens.json')
+        forecast_ens = pd.read_json(forecast_ens_file_path, convert_dates=True)
+        forecast_ens.index = pd.to_datetime(forecast_ens.index)
+        forecast_ens.sort_index(inplace=True, ascending=True)
+
+        # Writing CSV
+        response = HttpResponse(content_type='text/csv')
+        response['Content-Disposition'] = 'attachment; filename=streamflow_ensemble_forecast_{0}_{1}_{2}_{3}.csv'.format(watershed, subbasin, comid, startdate)
+
+        forecast_ens.to_csv(encoding='utf-8', header=True, path_or_buf=response)
+
+        return response
+
+    except Exception as e:
+        exc_type, exc_obj, exc_tb = sys.exc_info()
+        print("error: " + str(e))
+        print("line: " + str(exc_tb.tb_lineno))
+
+        return JsonResponse({
+                'error': f'{"error: " + str(e), "line: " + str(exc_tb.tb_lineno)}',
+        })
 
 
 def get_forecast_bc_data_csv(request):
@@ -1306,16 +1592,21 @@ def get_forecast_bc_data_csv(request):
     Returns Forecast data as csv
     """""
 
-    get_data = request.GET
-    global watershed
-    global subbasin
-    global comid
-    global forecast_df
-    global fixed_stats
-
     try:
 
+        get_data = request.GET
+        watershed = get_data['watershed']
+        subbasin = get_data['subbasin']
+        comid = get_data['streamcomid']
+        codEstacion = get_data['stationcode']
+        nomEstacion = get_data['stationname']
         startdate = get_data['startdate']
+
+        '''Get Bias-Corrected Forecast Data'''
+        forecast_data_bc_file_path = os.path.join(app.get_app_workspace().path, 'forecast_data_bc.json')
+        fixed_stats = pd.read_json(forecast_data_bc_file_path, convert_dates=True)
+        fixed_stats.index = pd.to_datetime(fixed_stats.index)
+        fixed_stats.sort_index(inplace=True, ascending=True)
 
         response = HttpResponse(content_type='text/csv')
         response['Content-Disposition'] = 'attachment; filename=corrected_streamflow_forecast_{0}_{1}_{2}_{3}.csv'.format(watershed, subbasin, comid, startdate)
@@ -1325,5 +1616,47 @@ def get_forecast_bc_data_csv(request):
         return response
 
     except Exception as e:
-        print(str(e))
-        return JsonResponse({'error': 'No forecast data found.'})
+        exc_type, exc_obj, exc_tb = sys.exc_info()
+        print("error: " + str(e))
+        print("line: " + str(exc_tb.tb_lineno))
+        return JsonResponse({
+            'error': f'{"error: " + str(e), "line: " + str(exc_tb.tb_lineno)}',
+        })
+
+
+def get_forecast_ensemble_bc_data_csv(request):
+    """""
+    Returns Forecast data as csv
+    """""
+
+    get_data = request.GET
+
+    try:
+        # get station attributes
+        watershed = get_data['watershed']
+        subbasin = get_data['subbasin']
+        comid = get_data['streamcomid']
+        startdate = get_data['startdate']
+
+        '''Get Forecast Ensemble Data'''
+        forecast_ens_bc_file_path = os.path.join(app.get_app_workspace().path, 'forecast_ens_bc.json')
+        corrected_ensembles = pd.read_json(forecast_ens_bc_file_path, convert_dates=True)
+        corrected_ensembles.index = pd.to_datetime(corrected_ensembles.index)
+        corrected_ensembles.sort_index(inplace=True, ascending=True)
+
+        # Writing CSV
+        response = HttpResponse(content_type='text/csv')
+        response['Content-Disposition'] = 'attachment; filename=corrected_streamflow_ensemble_forecast_{0}_{1}_{2}_{3}.csv'.format(watershed, subbasin, comid, startdate)
+
+        corrected_ensembles.to_csv(encoding='utf-8', header=True, path_or_buf=response)
+
+        return response
+
+    except Exception as e:
+        exc_type, exc_obj, exc_tb = sys.exc_info()
+        print("error: " + str(e))
+        print("line: " + str(exc_tb.tb_lineno))
+
+        return JsonResponse({
+            'error': f'{"error: " + str(e), "line: " + str(exc_tb.tb_lineno)}',
+        })
