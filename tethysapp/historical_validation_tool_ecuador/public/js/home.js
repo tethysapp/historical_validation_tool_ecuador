@@ -84,7 +84,7 @@ function init_map() {
 
 	var streams = new ol.layer.Image({
 		source: new ol.source.ImageWMS({
-			url: JSON.parse($('#geoserver_endpoint').val())[0].replace(/\/$/, "") + JSON.parse($('#geoserver_endpoint').val())[1] + '/wms',
+			url: 'https://geoserver.hydroshare.org/geoserver/HS-77951ba9bcf04ac5bc68ae3be2acfd90/wms',
 			params: { 'LAYERS': 'south_america-ecuador-geoglows-drainage_line' },
 			serverType: 'geoserver',
 			crossOrigin: 'Anonymous'
@@ -96,8 +96,8 @@ function init_map() {
 
 	var stations = new ol.layer.Image({
 		source: new ol.source.ImageWMS({
-			url: JSON.parse($('#geoserver_endpoint').val())[0].replace(/\/$/, "") + JSON.parse($('#geoserver_endpoint').val())[1] + '/wms',
-			params: { 'LAYERS': 'Ecuador_Stations' },
+			url: 'https://geoserver.hydroshare.org/geoserver/HS-77951ba9bcf04ac5bc68ae3be2acfd90/wms',
+			params: { 'LAYERS': 'Selected_Stations_Ecuador_Q' },
 			serverType: 'geoserver',
 			crossOrigin: 'Anonymous'
 		})
@@ -118,7 +118,7 @@ function init_map() {
 
 }
 
-let ajax_url = JSON.parse($('#geoserver_endpoint').val())[0].replace(/\/$/, "") + JSON.parse($('#geoserver_endpoint').val())[1] + '/wfs?request=GetCapabilities';
+let ajax_url = 'https://geoserver.hydroshare.org/geoserver/wfs?request=GetCapabilities';
 
 let capabilities = $.ajax(ajax_url, {
 	type: 'GET',
@@ -131,7 +131,7 @@ let capabilities = $.ajax(ajax_url, {
 	success: function() {
 		let x = capabilities.responseText
 		.split('<FeatureTypeList>')[1]
-		.split('ecuador_hydroviewer:south_america-ecuador-geoglows-drainage_line')[1]
+		.split('HS-77951ba9bcf04ac5bc68ae3be2acfd90:Selected_Stations_Ecuador_Q')[1]
 		.split('LatLongBoundingBox ')[1]
 		.split('/></FeatureType>')[0];
 
@@ -654,17 +654,13 @@ function map_events() {
 					dataType: 'json',
 					success: function (result) {
 						watershed = 'south_america' //OJO buscar como hacerla generica
-		         		//subbasin = 'continental' //OJO buscar como hacerla generica
 		         		subbasin = 'geoglows' //OJO buscar como hacerla generica
 		         		var startdate = '';
 		         		stationcode = result["features"][0]["properties"]["Codigo"];
-		         		//stationcode = result["features"][0]["properties"]["puobcodi"];
 		         		stationname = result["features"][0]["properties"]["Nombre_de"];
-		         		//stationname = result["features"][0]["properties"]["puobnomb"];
-		         		//streamcomid = result["features"][0]["properties"]["COMID"];
 		         		streamcomid = result["features"][0]["properties"]["new_COMID"];
 		         		basin = result["features"][0]["properties"]["Cuenca_Hid"];
-		         		//basin = '';
+
 		         		$("#station-info").append('<h3 id="Station-Name-Tab">Current Station: '+ stationname
                         			+ '</h3><h5 id="Station-Code-Tab">Station Code: '
                         			+ stationcode + '</h3><h5 id="COMID-Tab">Station COMID: '
