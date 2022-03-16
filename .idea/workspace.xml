@@ -2,16 +2,8 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="4b120b37-a8e4-4e9a-88fe-c8e10fd4d6e7" name="Default" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/tethysapp/historical_validation_tool_ecuador/controllers.py" beforeDir="false" afterPath="$PROJECT_DIR$/tethysapp/historical_validation_tool_ecuador/controllers.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tethysapp/historical_validation_tool_ecuador/public/js/home.js" beforeDir="false" afterPath="$PROJECT_DIR$/tethysapp/historical_validation_tool_ecuador/public/js/home.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tethysapp/historical_validation_tool_ecuador/workspaces/app_workspace/forecast_data_bc.json" beforeDir="false" afterPath="$PROJECT_DIR$/tethysapp/historical_validation_tool_ecuador/workspaces/app_workspace/forecast_data_bc.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tethysapp/historical_validation_tool_ecuador/workspaces/app_workspace/forecast_ens.json" beforeDir="false" afterPath="$PROJECT_DIR$/tethysapp/historical_validation_tool_ecuador/workspaces/app_workspace/forecast_ens.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tethysapp/historical_validation_tool_ecuador/workspaces/app_workspace/forecast_ens_bc.json" beforeDir="false" afterPath="$PROJECT_DIR$/tethysapp/historical_validation_tool_ecuador/workspaces/app_workspace/forecast_ens_bc.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tethysapp/historical_validation_tool_ecuador/workspaces/app_workspace/observed_data.json" beforeDir="false" afterPath="$PROJECT_DIR$/tethysapp/historical_validation_tool_ecuador/workspaces/app_workspace/observed_data.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tethysapp/historical_validation_tool_ecuador/workspaces/app_workspace/simulated_data.json" beforeDir="false" afterPath="$PROJECT_DIR$/tethysapp/historical_validation_tool_ecuador/workspaces/app_workspace/simulated_data.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tethysapp_historical_validation_tool_ecuador.egg-info/PKG-INFO" beforeDir="false" afterPath="$PROJECT_DIR$/tethysapp_historical_validation_tool_ecuador.egg-info/PKG-INFO" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
