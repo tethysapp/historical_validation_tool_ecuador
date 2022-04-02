@@ -10,23 +10,6 @@
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
-  <component name="FindInProjectRecents">
-    <findStrings>
-      <find>colombia</find>
-      <find>PlotlyView</find>
-      <find>ecuador</find>
-      <find>Ecuador_Stations</find>
-      <find>hs.setAccessRules(resource_id, public=True)</find>
-      <find>startdate</find>
-      <find>console.log(startdate</find>
-      <find>download_forecast</find>
-      <find>get_available_dates</find>
-      <find>forecast_df</find>
-    </findStrings>
-    <replaceStrings>
-      <replace>ecuador</replace>
-    </replaceStrings>
-  </component>
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>

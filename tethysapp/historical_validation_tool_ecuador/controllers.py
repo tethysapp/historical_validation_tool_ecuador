@@ -158,8 +158,6 @@ def get_popup_response(request):
 
         hs.setAccessRules(resource_id, public=False)
 
-        print("finished get_popup_response")
-
         observed_data_file_path = os.path.join(app.get_app_workspace().path, 'observed_data.json')
         observed_df.reset_index(level=0, inplace=True)
         observed_df['index'] = observed_df['index'].dt.strftime('%Y-%m-%d')
@@ -184,6 +182,8 @@ def get_popup_response(request):
         simulated_df.index = pd.to_datetime(simulated_df.index)
         simulated_df.index.name = 'Datetime'
         simulated_df.to_json(simulated_data_file_path)
+
+        print("finished get_popup_response")
 
         print("--- %s seconds getpopup ---" % (time.time() - start_time))
 
@@ -217,7 +217,7 @@ def get_hydrographs(request):
         '''Get Observed Data'''
         observed_data_file_path = os.path.join(app.get_app_workspace().path, 'observed_data.json')
         observed_df = pd.read_json(observed_data_file_path, convert_dates=True)
-        observed_df.index = pd.to_datetime(observed_df.index)
+        observed_df.index = pd.to_datetime(observed_df.index, unit='ms')
         observed_df.sort_index(inplace=True, ascending=True)
 
         '''Get Simulated Data'''
@@ -285,7 +285,7 @@ def get_dailyAverages(request):
         '''Get Observed Data'''
         observed_data_file_path = os.path.join(app.get_app_workspace().path, 'observed_data.json')
         observed_df = pd.read_json(observed_data_file_path,convert_dates=True)
-        observed_df.index = pd.to_datetime(observed_df.index)
+        observed_df.index = pd.to_datetime(observed_df.index, unit='ms')
         observed_df.sort_index(inplace=True, ascending=True)
 
         '''Get Simulated Data'''
@@ -363,7 +363,7 @@ def get_monthlyAverages(request):
         '''Get Observed Data'''
         observed_data_file_path = os.path.join(app.get_app_workspace().path, 'observed_data.json')
         observed_df = pd.read_json(observed_data_file_path,convert_dates=True)
-        observed_df.index = pd.to_datetime(observed_df.index)
+        observed_df.index = pd.to_datetime(observed_df.index, unit='ms')
         observed_df.sort_index(inplace=True, ascending=True)
 
         '''Get Simulated Data'''
@@ -442,7 +442,7 @@ def get_scatterPlot(request):
         '''Get Observed Data'''
         observed_data_file_path = os.path.join(app.get_app_workspace().path, 'observed_data.json')
         observed_df = pd.read_json(observed_data_file_path,convert_dates=True)
-        observed_df.index = pd.to_datetime(observed_df.index)
+        observed_df.index = pd.to_datetime(observed_df.index, unit='ms')
         observed_df.sort_index(inplace=True, ascending=True)
 
         '''Get Simulated Data'''
@@ -562,7 +562,7 @@ def get_scatterPlotLogScale(request):
         '''Get Observed Data'''
         observed_data_file_path = os.path.join(app.get_app_workspace().path, 'observed_data.json')
         observed_df = pd.read_json(observed_data_file_path, convert_dates=True)
-        observed_df.index = pd.to_datetime(observed_df.index)
+        observed_df.index = pd.to_datetime(observed_df.index, unit='ms')
         observed_df.sort_index(inplace=True, ascending=True)
 
         '''Get Simulated Data'''
@@ -655,7 +655,7 @@ def get_volumeAnalysis(request):
         '''Get Observed Data'''
         observed_data_file_path = os.path.join(app.get_app_workspace().path, 'observed_data.json')
         observed_df = pd.read_json(observed_data_file_path, convert_dates=True)
-        observed_df.index = pd.to_datetime(observed_df.index)
+        observed_df.index = pd.to_datetime(observed_df.index, unit='ms')
         observed_df.sort_index(inplace=True, ascending=True)
 
         '''Get Simulated Data'''
@@ -753,7 +753,7 @@ def volume_table_ajax(request):
         '''Get Observed Data'''
         observed_data_file_path = os.path.join(app.get_app_workspace().path, 'observed_data.json')
         observed_df = pd.read_json(observed_data_file_path, convert_dates=True)
-        observed_df.index = pd.to_datetime(observed_df.index)
+        observed_df.index = pd.to_datetime(observed_df.index, unit='ms')
         observed_df.sort_index(inplace=True, ascending=True)
 
         '''Get Simulated Data'''
@@ -882,7 +882,7 @@ def make_table_ajax(request):
         '''Get Observed Data'''
         observed_data_file_path = os.path.join(app.get_app_workspace().path, 'observed_data.json')
         observed_df = pd.read_json(observed_data_file_path, convert_dates=True)
-        observed_df.index = pd.to_datetime(observed_df.index)
+        observed_df.index = pd.to_datetime(observed_df.index, unit='ms')
         observed_df.sort_index(inplace=True, ascending=True)
 
         '''Get Simulated Data'''
@@ -1126,7 +1126,7 @@ def get_time_series_bc(request):
         '''Get Observed Data'''
         observed_data_file_path = os.path.join(app.get_app_workspace().path, 'observed_data.json')
         observed_df = pd.read_json(observed_data_file_path, convert_dates=True)
-        observed_df.index = pd.to_datetime(observed_df.index)
+        observed_df.index = pd.to_datetime(observed_df.index, unit='ms')
         observed_df.sort_index(inplace=True, ascending=True)
 
         '''Get Simulated Data'''
@@ -1455,7 +1455,7 @@ def get_observed_discharge_csv(request):
         
         observed_data_file_path = os.path.join(app.get_app_workspace().path, 'observed_data.json')
         observed_df = pd.read_json(observed_data_file_path, convert_dates=True)
-        observed_df.index = pd.to_datetime(observed_df.index)
+        observed_df.index = pd.to_datetime(observed_df.index, unit='ms')
         observed_df.sort_index(inplace=True, ascending=True)
 
         datesObservedDischarge = observed_df.index.tolist()
