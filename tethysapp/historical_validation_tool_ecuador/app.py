@@ -8,10 +8,10 @@ class HistoricalValidationToolEcuador(TethysAppBase):
 
     name = 'Historical Validation Tool Ecuador'
     index = 'historical_validation_tool_ecuador:home'
-    icon = 'historical_validation_tool_ecuador/images/historic_validation_ecuador_logo.png'
+    icon = 'historical_validation_tool_ecuador/images/HVT.jpeg'
     package = 'historical_validation_tool_ecuador'
     root_url = 'historical-validation-tool-ecuador'
-    color = '#c0392b'
+    color = '#4074dd'
     description = 'This app combines the observed data and the simulated data from the GEOGloWS ECMWF Streaamflow Services in Ecuador.'
     tags = '"Hydrology", "Time Series", "Bias Correction", "Hydrostats", "GEOGloWS", "Historical Validation Tool", "Ecuador"'
     enable_feedback = False

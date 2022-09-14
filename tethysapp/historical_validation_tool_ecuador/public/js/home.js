@@ -1,11 +1,13 @@
 // Getting the csrf token
-function get_requestData (watershed, subbasin, streamcomid, stationcode, stationname,  startdate){
+function get_requestData (watershed, subbasin, streamcomid, stationcode, stationname,latitude, longitude, startdate){
   getdata = {
       'watershed': watershed,
       'subbasin': subbasin,
       'streamcomid': streamcomid,
       'stationcode':stationcode,
       'stationname': stationname,
+      'latitude': latitude,
+      'longitude': longitude
   };
   $.ajax({
       url: 'get-request-data',
@@ -28,7 +30,7 @@ function get_requestData (watershed, subbasin, streamcomid, stationcode, station
           }, 5000);
       },
       success: function (data) {
-        get_hydrographs (watershed, subbasin, streamcomid, stationcode, stationname, startdate);
+        get_hydrographs (watershed, subbasin, streamcomid, stationcode, stationname, latitude, longitude, startdate);
       }
   })
 
@@ -82,26 +84,28 @@ function init_map() {
 		})
 	});
 
-	var streams = new ol.layer.Image({
-		source: new ol.source.ImageWMS({
-			url: 'https://geoserver.hydroshare.org/geoserver/HS-77951ba9bcf04ac5bc68ae3be2acfd90/wms',
-			params: { 'LAYERS': 'south_america-ecuador-geoglows-drainage_line' },
-			serverType: 'geoserver',
-			crossOrigin: 'Anonymous'
-		}),
-		opacity: 0.5
-	});
+    var streams = new ol.layer.Image({
+        source: new ol.source.ImageWMS({
+            //url: 'https://geoserver.hydroshare.org/geoserver/HS-77951ba9bcf04ac5bc68ae3be2acfd90/wms',
+            url: 'https://tethys-inamhi.westus2.cloudapp.azure.com/geoserver/ecuador_hydroviewer/wms',
+            params: { 'LAYERS': 'south_america-ecuador-geoglows-drainage_line' },
+            serverType: 'geoserver',
+            crossOrigin: 'Anonymous'
+        }),
+        opacity: 0.5
+    });
 
 	wmsLayer = streams;
 
-	var stations = new ol.layer.Image({
-		source: new ol.source.ImageWMS({
-			url: 'https://geoserver.hydroshare.org/geoserver/HS-77951ba9bcf04ac5bc68ae3be2acfd90/wms',
-			params: { 'LAYERS': 'Selected_Stations_Ecuador_Q' },
-			serverType: 'geoserver',
-			crossOrigin: 'Anonymous'
-		})
-	});
+    var stations = new ol.layer.Image({
+        source: new ol.source.ImageWMS({
+            //url: 'https://geoserver.hydroshare.org/geoserver/HS-77951ba9bcf04ac5bc68ae3be2acfd90/wms',
+            url: 'https://tethys-inamhi.westus2.cloudapp.azure.com/geoserver/ecuador_hydroviewer/wms',
+            params: { 'LAYERS': 'Selected_Stations_Ecuador_Q' },
+            serverType: 'geoserver',
+            crossOrigin: 'Anonymous'
+        })
+    });
 
 	wmsLayer2 = stations;
 
@@ -118,40 +122,41 @@ function init_map() {
 
 }
 
-let ajax_url = 'https://geoserver.hydroshare.org/geoserver/wfs?request=GetCapabilities';
+//let ajax_url = 'https://geoserver.hydroshare.org/geoserver/wfs?request=GetCapabilities';
+let ajax_url = 'https://tethys-inamhi.westus2.cloudapp.azure.com/geoserver/wfs?request=GetCapabilities';
 
 let capabilities = $.ajax(ajax_url, {
-	type: 'GET',
-	data:{
-		service: 'WFS',
-		version: '1.0.0',
-		request: 'GetCapabilities',
-		outputFormat: 'text/javascript'
-	},
-	success: function() {
-		let x = capabilities.responseText
-		.split('<FeatureTypeList>')[1]
-		.split('HS-77951ba9bcf04ac5bc68ae3be2acfd90:Selected_Stations_Ecuador_Q')[1]
-		.split('LatLongBoundingBox ')[1]
-		.split('/></FeatureType>')[0];
+    type: 'GET',
+    data:{
+        service: 'WFS',
+        version: '1.0.0',
+        request: 'GetCapabilities',
+        outputFormat: 'text/javascript'
+    },
+    success: function() {
+        let x = capabilities.responseText
+        .split('<FeatureTypeList>')[1]
+        //.split('HS-77951ba9bcf04ac5bc68ae3be2acfd90:Selected_Stations_Ecuador_Q')[1]
+        .split('ecuador_hydroviewer:Selected_Stations_Ecuador_Q')[1]
+        .split('LatLongBoundingBox ')[1]
+        .split('/></FeatureType>')[0];
 
-		let minx = Number(x.split('"')[1]);
-		let miny = Number(x.split('"')[3]);
-		let maxx = Number(x.split('"')[5]);
-		let maxy = Number(x.split('"')[7]);
+        let minx = Number(x.split('"')[1]);
+        let miny = Number(x.split('"')[3]);
+        let maxx = Number(x.split('"')[5]);
+        let maxy = Number(x.split('"')[7]);
 
-		minx = minx + 2;
-		miny = miny + 2;
-		maxx = maxx - 2;
-		maxy = maxy - 2;
+        minx = minx + 2;
+        miny = miny + 2;
+        maxx = maxx - 2;
+        maxy = maxy - 2;
 
-		let extent = ol.proj.transform([minx, miny], 'EPSG:4326', 'EPSG:3857').concat(ol.proj.transform([maxx, maxy], 'EPSG:4326', 'EPSG:3857'));
-
-		map.getView().fit(extent, map.getSize());
-	}
+        let extent = ol.proj.transform([minx, miny], 'EPSG:4326', 'EPSG:3857').concat(ol.proj.transform([maxx, maxy], 'EPSG:4326', 'EPSG:3857'));
+        map.getView().fit(extent, map.getSize());
+    }
 });
 
-function get_hydrographs (watershed, subbasin, streamcomid, stationcode, stationname, startdate) {
+function get_hydrographs (watershed, subbasin, streamcomid, stationcode, stationname, latitude, longitude, startdate) {
 	$('#hydrographs-loading').removeClass('hidden');
 	m_downloaded_historical_streamflow = true;
     $.ajax({
@@ -162,7 +167,10 @@ function get_hydrographs (watershed, subbasin, streamcomid, stationcode, station
             'subbasin': subbasin,
             'streamcomid': streamcomid,
             'stationcode': stationcode,
-            'stationname': stationname
+            'stationname': stationname,
+            'latitude': latitude,
+            'longitude': longitude
+
         },
         contentType: "application/json",
         error: function() {
@@ -213,7 +221,9 @@ function get_hydrographs (watershed, subbasin, streamcomid, stationcode, station
                 	subbasin: subbasin,
                 	streamcomid: streamcomid,
                 	stationcode:stationcode,
-                	stationname: stationname
+                	stationname: stationname,
+                	latitude: latitude,
+                	longitude: longitude
                 };
 
                 $('#submit-download-simulated-discharge').attr({
@@ -660,13 +670,16 @@ function map_events() {
 		         		stationname = result["features"][0]["properties"]["Nombre_de"];
 		         		streamcomid = result["features"][0]["properties"]["new_COMID"];
 		         		basin = result["features"][0]["properties"]["Cuenca_Hid"];
+		         		latitude = result["features"][0]["properties"]["Latitude"];
+		         		longitude = result["features"][0]["properties"]["Longitude"];
+		         		provincia = result["features"][0]["properties"]["dpa_despro"];
 
 		         		$("#station-info").append('<h3 id="Station-Name-Tab">Current Station: '+ stationname
                         			+ '</h3><h5 id="Station-Code-Tab">Station Code: '
                         			+ stationcode + '</h3><h5 id="COMID-Tab">Station COMID: '
                         			+ streamcomid+ '</h5><h5>Basin: '+ basin + '</h5>');
 
-                        get_requestData(watershed, subbasin, streamcomid, stationcode, stationname, startdate);
+                        get_requestData(watershed, subbasin, streamcomid, stationcode, stationname,latitude, longitude, startdate);
                     },
 					error: function(e){
 						console.log(e);
@@ -761,8 +774,8 @@ $(function() {
         startdate = startdate.replace("-","");
 
         $loading.removeClass('hidden');
-        get_time_series(watershed, subbasin, streamcomid, stationcode, stationname, startdate);
-        get_time_series_bc(watershed, subbasin, streamcomid, stationcode, stationname, startdate);
+        get_time_series(watershed, subbasin, streamcomid, stationcode, stationname, latitude, longitude,startdate);
+        get_time_series_bc(watershed, subbasin, streamcomid, stationcode, stationname,latitude, longitude, startdate);
     });
 
 });
@@ -778,7 +791,43 @@ function getRegionGeoJsons() {
 
         var regionStyle = new ol.style.Style({
             stroke: new ol.style.Stroke({
-                color: 'red',
+                color: '#0050a0',
+                width: 3
+            })
+        });
+
+        var regionsLayer = new ol.layer.Vector({
+            name: 'myRegion',
+            source: regionsSource,
+            style: regionStyle
+        });
+
+        map.getLayers().forEach(function(regionsLayer) {
+        if (regionsLayer.get('name')=='myRegion')
+            map.removeLayer(regionsLayer);
+        });
+        map.addLayer(regionsLayer)
+
+        setTimeout(function() {
+            var myExtent = regionsLayer.getSource().getExtent();
+            map.getView().fit(myExtent, map.getSize());
+        }, 500);
+    }
+}
+
+function getBasinGeoJsons() {
+
+    let basins = region_index2[$("#basins").val()]['geojsons'];
+    console.log(basins)
+    for (let i in basins) {
+        var regionsSource = new ol.source.Vector({
+           url: staticGeoJSON2 + basins[i],
+           format: new ol.format.GeoJSON()
+        });
+
+        var regionStyle = new ol.style.Style({
+            stroke: new ol.style.Stroke({
+                color: '#0050a0',
                 width: 3
             })
         });
@@ -812,6 +861,8 @@ $('#stp-stations-toggle').on('change', function() {
 // Regions gizmo listener
 $('#regions').change(function() {getRegionGeoJsons()});
 
+// Basins gizmo listener
+$('#basins').change(function() {getBasinGeoJsons()});
 
 // Function for the select2 metric selection tool
 $(document).ready(function() {
@@ -964,6 +1015,8 @@ function makeDefaultTable(watershed, subbasin, streamcomid, stationcode, station
 	  'streamcomid': streamcomid,
 	  'stationcode': stationcode,
 	  'stationname': stationname,
+	  'latitude' : latitude,
+	  'longitude': longitude,
 	  'metrics': selected_metrics,
   }
 
@@ -1025,7 +1078,7 @@ function get_available_dates(watershed, subbasin, comid) {
 }
 
 
-function get_time_series(watershed, subbasin, streamcomid, stationcode, stationname, startdate) {
+function get_time_series(watershed, subbasin, streamcomid, stationcode, stationname,latitude, longitude, startdate) {
     $('#forecast-loading').removeClass('hidden');
     $('#forecast-chart').addClass('hidden');
     $('#dates').addClass('hidden');
@@ -1038,6 +1091,8 @@ function get_time_series(watershed, subbasin, streamcomid, stationcode, stationn
             'streamcomid': streamcomid,
             'stationcode': stationcode,
             'stationname': stationname,
+            'longitude': longittude,
+            'latitude': latitude,
             'startdate': startdate,
         },
         error: function() {
@@ -1072,6 +1127,8 @@ function get_time_series(watershed, subbasin, streamcomid, stationcode, stationn
                     streamcomid: streamcomid,
                     stationcode: stationcode,
                     stationname: stationname,
+                    longitude: longitude,
+                    latitude: latitude,
                     startdate: startdate,
                 };
 
@@ -1089,7 +1146,7 @@ function get_time_series(watershed, subbasin, streamcomid, stationcode, stationn
 
                 $('#download_forecast_ensemble').removeClass('hidden');
 
-                get_time_series_bc(watershed, subbasin, streamcomid, stationcode, stationname, startdate);
+                get_time_series_bc(watershed, subbasin, streamcomid, stationcode, stationname, latitude, longitude,startdate);
 
             } else if (data.error) {
             	$('#forecast-loading').addClass('hidden');
@@ -1108,7 +1165,7 @@ function get_time_series(watershed, subbasin, streamcomid, stationcode, stationn
     });
 }
 
-function get_time_series_bc(watershed, subbasin, streamcomid, stationcode, stationname, startdate) {
+function get_time_series_bc(watershed, subbasin, streamcomid, stationcode, stationname, latitude, longitude,startdate) {
     $('#forecast-bc-loading').removeClass('hidden');
     $('#forecast-bc-chart').addClass('hidden');
     $('#dates').addClass('hidden');
@@ -1121,6 +1178,8 @@ function get_time_series_bc(watershed, subbasin, streamcomid, stationcode, stati
             'streamcomid': streamcomid,
             'stationcode': stationcode,
             'stationname': stationname,
+            'longitude' : longitude,
+            'latitude' : latitude,
             'startdate': startdate,
         },
         error: function() {
@@ -1156,6 +1215,8 @@ function get_time_series_bc(watershed, subbasin, streamcomid, stationcode, stati
                     streamcomid: streamcomid,
                     stationcode: stationcode,
                     stationname: stationname,
+                    longitude: longitude,
+                    Latitude: latitude,
                     startdate: startdate,
                 };
 

@@ -8,23 +8,32 @@
 {% endblock %}
 
 {% block app_content %}
-  <div id="map" class="map">
+
+
+<script type="text/javascript" >
+</script>
+
+ <div id="map" class="map">
     <div id="map-view-legend" class="map-view-legend ol-unselectable ol-control">
       <div>
         <svg width="20" height="20" viewPort="0 0 20 20" version="1.1" xmlns="http://www.w3.org/2000/svg">
-          <polyline points="19 1, 1 6, 19 14, 1 19" stroke="#0000FF" fill="transparent" stroke-width="2"/>
+          <polyline points="19 1, 1 6, 19 14, 1 19" stroke="#4074dd" fill="transparent" stroke-width="2"/>
         </svg>
         Streams <input id="stp-stream-toggle" class="toggle-layer" type="checkbox" checked data-toggle="toggle" data-size="mini">
       </div>
       <div>
         <svg width="20" height="20" viewPort="0 0 20 20" version="1.1" xmlns="http://www.w3.org/2000/svg">
-          <polyline points="0 10, 0 0, 10 0, 10 10, 0 10" stroke="rgba(255,0,0,1)" fill="rgba(255,0,0,1)" stroke-width="2"/>
+          <polyline points="0 10, 0 0, 10 0, 10 10, 0 10" stroke="#e61e29" fill="#e61e29" stroke-width="2"/>
         </svg>
         Stations <input id="stp-stations-toggle" class="toggle-layer" type="checkbox" checked data-toggle="toggle" data-size="mini">
       </div>
       <div>
         <br>
         {% gizmo select_input regions %}
+      </div>
+      <div>
+        <br>
+        {% gizmo select_input basins %}
       </div>
     </div>
   </div>
@@ -40,7 +49,7 @@
   </div>
 
   <div class="header-button glyphicon-button" data-toggle="tooltip" data-placement="bottom" title="Help">
-    <a data-toggle="modal" data-target="#help-modal"><span class="glyphicon glyphicon-question-sign"></span></a>
+    <a data-toggle="modal" data-target="#help-modal" id="modal_help"><span class="glyphicon glyphicon-question-sign"></span></a>
   </div>
 {% endblock %}
 
@@ -56,9 +65,10 @@
             <div id="station-info" class="col-md-8"></div>
             <div class="col-md-4">
               <div align="right">
-                <img class="obslogos" src="{% static 'historical_validation_tool_ecuador/images/byu_logo.png' %}">
                 <img class="obslogos" src="{% static 'historical_validation_tool_ecuador/images/my-icon-inamhi.png' %}">
+                <img class="obslogos" src="{% static 'historical_validation_tool_ecuador/images/byu_logo.png' %}">
                 <img class="obslogos" src="{% static 'historical_validation_tool_ecuador/images/Servir_logo.jpeg' %}">
+                <img class="obslogos" src="{% static 'historical_validation_tool_ecuador/images/EcoCiencia.png' %}">
               </div>
             </div>
             <div id="interaction"></div>
@@ -126,10 +136,10 @@
               <div class="panel panel-default">
                 <div class="panel-body">
                   <hr>
-                  <h2>Table</h2>
+                    <h2 ><strong>TABLE</strong></h2>
                   <hr>
 
-                  <h3>Select the Metrics to Include in the Report:</h3>
+                  <h3> <strong> Choose the metrics to include in the Report:</strong></strong></h3>
                   <a href="https://hydroerr.readthedocs.io/en/stable/list_of_metrics.html" target="_blank">[Docs]</a>
                   <div id="metric_select_error"></div>
                   {# Displaying all of the metrics for the user to select #}
@@ -142,11 +152,10 @@
                   <h4>
                     <button type="button" class="btn btn-success" id="make-table">Add Metrics to List</button><br><br>
                     <p>
-                      Press the button to add metrics to the default list. The default list includes: Mean Error, Root Mean Square Error, Normalize Root Mean Square Error- mean
-                      , Mean Absolute Percentage Error, Nash-Sutcliffe Efficiency, Kling-Gupta-Efficiency (2009), King-Glupta-Efficiency (2012), Pearson Correlation Coefficient,
-                      Spearman Rank Correlation Coefficient, and Coefficient of Determination.
+                     Press the button to add metrics to the default list. <strong> add metrics </strong> The default list includes:
+                      Mean Error, Root Mean Square Error, Normalize Root Mean Square Error- mean , Mean Absolute Percentage Error, Nash-Sutcliffe Efficiency, Kling-Gupta-Efficiency (2009), King-Glupta-Efficiency (2012), Pearson Correlation Coefficient, Spearman Rank Correlation Coefficient, and Coefficient of Determination.
                     </p>
-                    Optional Parameters
+                    <strong>OPTIONAL PARAMETERS</strong>
                     <span style="font-size: 15px;" class="glyphicon glyphicon-info-sign icon_info"
                           title="Optional parameter input boxes will appear here if a metric with optional parameters is selected.">
                     </span>
@@ -258,19 +267,34 @@
       <div class="modal-content">
         <div class="modal-header">
           <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-          <h5 class="modal-title" id="help-modal-label">Historical Validation Tool</h5>
+          <h5 class="modal-title" id="help-modal-label"> <strong> HISTORICAL VALIDATION TOOL </strong> </h5>
         </div>
         <div class="modal-body">
-          <p>The Historical Validation Tool customized for Ecuador is a light-weight application for evaluate and bias-correct the historical simulation for the GEOGloWS ECMWF Streamflow Prediction Tool in Ecuador.</p>
-          <p>This app allows us to use the hydrostats functionality in order to evaluate how accurate is the historical simulation and the bias-corrected historical simulation in the GEOGloWS ECMWF Streamflow Prediction Tool compared to the observed streamflow in the Gauging Stations in Ecuador.</p>
-          <p>Additionally, this bias-correction is extended to the GEOGloWS ECMWF Streamflow Prediction Tool short term forecast</p>
-          <p>Users can click on any station in the map to retrieve observed and simulated data.</p>
+
+
+
+          <p> La app <strong>Historical Validation Tool personalizada para Ecuador</strong> es una aplicación liviana para evaluar y corregir el sesgo de la simulación histórica para la herramienta de predicción de caudales GEOGloWS ECMWF en Ecuador.</p>
+          <p> Esta aplicación nos permite usar la funcionalidad de hydrostats para evaluar la precisión de la simulación histórica y la simulación histórica con corrección de sesgo en la Herramienta de predicción de caudal GEOGloWS ECMWF en comparación con el caudal observado en las estaciones de medición en Ecuador.</p>
+          <p>Adicional, esta corrección de sesgo se extiende a corto plazo a la herramienta de predicción de caudal GEOGloWS ECMWF para pronóstico</p>
+          <p>Los usuarios pueden hacer clic en cualquier estación del mapa para obtener datos observados y simulados.</p>
           <ol>
-            <li> The first tab displays a plot of the historical observed data, the GEOGloWS ECMWF Streamflow Prediction Tool historic simulation and bias-correction simulation data for 40 years from 1979 to 2018, and the bias corrected simulated hydrograph for 35 years from 1980 to 2015.</li>
-            <li> The second tab displays the Visual Analysis included in Hydrostats. It includes plots for the daily average streamflow, the monthly average streamflow, the scatter plot, the scatter plot in the log scale, the volume analysis for the corrected simulated, simulated, and observed volume.</li>
-            <li> The third tab includes a table report with some predefined list of metrics. It also allows you select a set of metrics that you want to use in order to validate the historical simulation of the Streamflow Prediction Tool.</li>
-            <li> The fourth tab displays a plot with the GEOGloWS ECMWF Streamflow Prediction Tool forecast data and the bias corrected forecast data.</li>
+            <li> La primera pestaña muestra un gráfico de los datos históricos observados, la simulación histórica de GEOGloWS ECMWF Streamflow Prediction Tool y los datos de simulación de corrección de sesgo durante 40 años desde 1979 hasta 2018, y el hidrograma simulado con corrección de sesgo durante 35 años desde 1980 hasta 2015.</li>
+            <li> La segunda pestaña muestra el análisis visual incluido en Hydrostats. Incluye gráficas para el caudal medio diario, el caudal medio mensual, el gráfico de dispersión, el gráfico de dispersión en escala logarítmica, el análisis de volumen para el volumen corregido simulado, simulado y observado.</li>
+            <li> La tercera pestaña incluye un reporte con una lista predefinida de métricas. También le permite seleccionar un conjunto de métricas que desee utilizar para validar la simulación histórica de la herramienta de predicción de caudales.</li>
+            <li>La cuarta pestaña muestra un gráfico con los datos de pronóstico de la Herramienta de predicción de caudales de GEOGloWS ECMWF y los datos de pronóstico con corrección de sesgo.</li>
           </ol>
+
+           <p style="color:#e61e29;">Disclaimer: El usuario debe considerar que estas simulaciones y pronósticos son una referencia
+              que utiliza la herramienta de predicción del GEOGloWS ECMWF y datos observados de las estaciones hidrológicas
+              del INAMHI para estimar el rango más probable de niveles y caudales por encima o debajo del promedio
+              histórico simulado.
+           </p>
+
+           <ol style="color:#e61e29;">
+             <li> El usuario debe tener en cuenta la probabilidad de que una predicción no sea siempre  correcta.</li>
+             <li>El usuario de esta herramienta acepta de antemano la forma y uso de la información.</li>
+           </ol style="color:#e61e29;">
+
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>

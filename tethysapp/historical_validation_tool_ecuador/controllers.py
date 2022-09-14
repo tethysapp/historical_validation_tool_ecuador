@@ -93,11 +93,21 @@ def home(request):
         options=[(region_index[opt]['name'], opt) for opt in region_index]
     )
 
+    region_index2 = json.load(open(os.path.join(os.path.dirname(__file__), 'public', 'geojson2', 'index2.json')))
+    basins = SelectInput(
+        display_text='Zoom to a Basin:',
+        name='basins',
+        multiple=False,
+        original=True,
+        options=[(region_index2[opt]['name'], opt) for opt in region_index2]
+    )
+
     context = {
         "metric_loop_list": metric_loop_list,
         "geoserver_endpoint": geoserver_endpoint,
         "date_picker": date_picker,
-        "regions": regions
+        "regions": regions,
+        "basins": basins
     }
 
     return render(request, 'historical_validation_tool_ecuador/home.html', context)

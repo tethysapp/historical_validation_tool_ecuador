@@ -4,6 +4,19 @@
     <list default="true" id="4b120b37-a8e4-4e9a-88fe-c8e10fd4d6e7" name="Default" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/tethysapp/historical_validation_tool_ecuador/controllers.py" beforeDir="false" afterPath="$PROJECT_DIR$/tethysapp/historical_validation_tool_ecuador/controllers.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tethysapp/historical_validation_tool_ecuador/public/css/main.css" beforeDir="false" afterPath="$PROJECT_DIR$/tethysapp/historical_validation_tool_ecuador/public/css/main.css" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tethysapp/historical_validation_tool_ecuador/public/geojson/index.json" beforeDir="false" afterPath="$PROJECT_DIR$/tethysapp/historical_validation_tool_ecuador/public/geojson/index.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tethysapp/historical_validation_tool_ecuador/public/images/my-icon-inamhi.png" beforeDir="false" afterPath="$PROJECT_DIR$/tethysapp/historical_validation_tool_ecuador/public/images/my-icon-inamhi.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tethysapp/historical_validation_tool_ecuador/public/js/home.js" beforeDir="false" afterPath="$PROJECT_DIR$/tethysapp/historical_validation_tool_ecuador/public/js/home.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tethysapp/historical_validation_tool_ecuador/public/js/regionsIndex.js" beforeDir="false" afterPath="$PROJECT_DIR$/tethysapp/historical_validation_tool_ecuador/public/js/regionsIndex.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tethysapp/historical_validation_tool_ecuador/templates/historical_validation_tool_ecuador/base.html" beforeDir="false" afterPath="$PROJECT_DIR$/tethysapp/historical_validation_tool_ecuador/templates/historical_validation_tool_ecuador/base.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tethysapp/historical_validation_tool_ecuador/templates/historical_validation_tool_ecuador/home.html" beforeDir="false" afterPath="$PROJECT_DIR$/tethysapp/historical_validation_tool_ecuador/templates/historical_validation_tool_ecuador/home.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tethysapp/historical_validation_tool_ecuador/workspaces/app_workspace/corrected_data.json" beforeDir="false" afterPath="$PROJECT_DIR$/tethysapp/historical_validation_tool_ecuador/workspaces/app_workspace/corrected_data.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tethysapp/historical_validation_tool_ecuador/workspaces/app_workspace/forecast_data_bc.json" beforeDir="false" afterPath="$PROJECT_DIR$/tethysapp/historical_validation_tool_ecuador/workspaces/app_workspace/forecast_data_bc.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tethysapp/historical_validation_tool_ecuador/workspaces/app_workspace/forecast_ens.json" beforeDir="false" afterPath="$PROJECT_DIR$/tethysapp/historical_validation_tool_ecuador/workspaces/app_workspace/forecast_ens.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tethysapp/historical_validation_tool_ecuador/workspaces/app_workspace/forecast_ens_bc.json" beforeDir="false" afterPath="$PROJECT_DIR$/tethysapp/historical_validation_tool_ecuador/workspaces/app_workspace/forecast_ens_bc.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tethysapp/historical_validation_tool_ecuador/workspaces/app_workspace/observed_data.json" beforeDir="false" afterPath="$PROJECT_DIR$/tethysapp/historical_validation_tool_ecuador/workspaces/app_workspace/observed_data.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tethysapp/historical_validation_tool_ecuador/workspaces/app_workspace/simulated_data.json" beforeDir="false" afterPath="$PROJECT_DIR$/tethysapp/historical_validation_tool_ecuador/workspaces/app_workspace/simulated_data.json" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -13,28 +26,48 @@
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
+  <component name="GitSEFilterConfiguration">
+    <file-type-list>
+      <filtered-out-file-type name="LOCAL_BRANCH" />
+      <filtered-out-file-type name="REMOTE_BRANCH" />
+      <filtered-out-file-type name="TAG" />
+      <filtered-out-file-type name="COMMIT_BY_MESSAGE" />
+    </file-type-list>
+  </component>
+  <component name="MarkdownSettingsMigration">
+    <option name="stateVersion" value="1" />
+  </component>
+  <component name="ProblemsViewState">
+    <option name="selectedTabId" value="CurrentFile" />
+  </component>
   <component name="ProjectId" id="265aR5S5WzRmXfOjn1KoZ09f3LR" />
-  <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
+  <component name="ProjectLevelVcsManager" settingsEditedManually="true">
+    <ConfirmationsSetting value="1" id="Add" />
+  </component>
   <component name="ProjectViewState">
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
   <component name="PropertiesComponent">
-    <property name="last_opened_file_path" value="$PROJECT_DIR$" />
+    <property name="RunOnceActivity.OpenProjectViewOnStart" value="true" />
+    <property name="RunOnceActivity.ShowReadmeOnStart" value="true" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$/../national_water_level_forecast_ecuador" />
     <property name="settings.editor.selected.configurable" value="com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable" />
   </component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
-      <recent name="$PROJECT_DIR$/tethysapp/historical_validation_tool_ecuador/workspaces/app_workspace" />
+      <recent name="$PROJECT_DIR$/tethysapp/historical_validation_tool_ecuador/public/geojson2" />
+      <recent name="$PROJECT_DIR$/tethysapp/historical_validation_tool_ecuador/public/geojson" />
       <recent name="$PROJECT_DIR$/tethysapp/historical_validation_tool_ecuador/public/js" />
+      <recent name="$PROJECT_DIR$/tethysapp/historical_validation_tool_ecuador/workspaces/app_workspace" />
       <recent name="$PROJECT_DIR$/tethysapp/historical_validation_tool_ecuador" />
-      <recent name="$PROJECT_DIR$/tethysapp/historical_validation_tool_ecuador/public/images" />
-      <recent name="$PROJECT_DIR$/tethysapp/historical_validation_tool_ecuador/templates/historical_validation_tool_ecuador" />
     </key>
     <key name="MoveFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/tethysapp/historical_validation_tool_ecuador/public/geojson2" />
       <recent name="$PROJECT_DIR$/tethysapp/historical_validation_tool_ecuador/public" />
     </key>
   </component>
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
   <component name="SvnConfiguration">
     <configuration />
   </component>
