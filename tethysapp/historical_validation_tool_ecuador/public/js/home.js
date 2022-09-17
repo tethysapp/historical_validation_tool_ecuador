@@ -1,13 +1,12 @@
 // Getting the csrf token
-function get_requestData (watershed, subbasin, streamcomid, stationcode, stationname,latitude, longitude, startdate){
+function get_requestData (watershed, subbasin, streamcomid, stationcode, stationname, startdate){
   getdata = {
       'watershed': watershed,
       'subbasin': subbasin,
       'streamcomid': streamcomid,
       'stationcode':stationcode,
       'stationname': stationname,
-      'latitude': latitude,
-      'longitude': longitude
+      'startdate': startdate,
   };
   $.ajax({
       url: 'get-request-data',
@@ -30,7 +29,7 @@ function get_requestData (watershed, subbasin, streamcomid, stationcode, station
           }, 5000);
       },
       success: function (data) {
-        get_hydrographs (watershed, subbasin, streamcomid, stationcode, stationname, latitude, longitude, startdate);
+        get_hydrographs (watershed, subbasin, streamcomid, stationcode, stationname, startdate);
       }
   })
 
@@ -156,7 +155,7 @@ let capabilities = $.ajax(ajax_url, {
     }
 });
 
-function get_hydrographs (watershed, subbasin, streamcomid, stationcode, stationname, latitude, longitude, startdate) {
+function get_hydrographs (watershed, subbasin, streamcomid, stationcode, stationname, startdate) {
 	$('#hydrographs-loading').removeClass('hidden');
 	m_downloaded_historical_streamflow = true;
     $.ajax({
@@ -168,9 +167,7 @@ function get_hydrographs (watershed, subbasin, streamcomid, stationcode, station
             'streamcomid': streamcomid,
             'stationcode': stationcode,
             'stationname': stationname,
-            'latitude': latitude,
-            'longitude': longitude
-
+            'startdate': startdate,
         },
         contentType: "application/json",
         error: function() {
@@ -222,8 +219,6 @@ function get_hydrographs (watershed, subbasin, streamcomid, stationcode, station
                 	streamcomid: streamcomid,
                 	stationcode:stationcode,
                 	stationname: stationname,
-                	latitude: latitude,
-                	longitude: longitude
                 };
 
                 $('#submit-download-simulated-discharge').attr({
@@ -679,7 +674,7 @@ function map_events() {
                         			+ stationcode + '</h3><h5 id="COMID-Tab">Station COMID: '
                         			+ streamcomid+ '</h5><h5>Basin: '+ basin + '</h5>');
 
-                        get_requestData(watershed, subbasin, streamcomid, stationcode, stationname,latitude, longitude, startdate);
+                        get_requestData(watershed, subbasin, streamcomid, stationcode, stationname, startdate);
                     },
 					error: function(e){
 						console.log(e);
@@ -774,8 +769,8 @@ $(function() {
         startdate = startdate.replace("-","");
 
         $loading.removeClass('hidden');
-        get_time_series(watershed, subbasin, streamcomid, stationcode, stationname, latitude, longitude,startdate);
-        get_time_series_bc(watershed, subbasin, streamcomid, stationcode, stationname,latitude, longitude, startdate);
+        get_time_series(watershed, subbasin, streamcomid, stationcode, stationname, startdate);
+        get_time_series_bc(watershed, subbasin, streamcomid, stationcode, stationname, startdate);
     });
 
 });
@@ -818,7 +813,6 @@ function getRegionGeoJsons() {
 function getBasinGeoJsons() {
 
     let basins = region_index2[$("#basins").val()]['geojsons'];
-    console.log(basins)
     for (let i in basins) {
         var regionsSource = new ol.source.Vector({
            url: staticGeoJSON2 + basins[i],
@@ -1015,8 +1009,6 @@ function makeDefaultTable(watershed, subbasin, streamcomid, stationcode, station
 	  'streamcomid': streamcomid,
 	  'stationcode': stationcode,
 	  'stationname': stationname,
-	  'latitude' : latitude,
-	  'longitude': longitude,
 	  'metrics': selected_metrics,
   }
 
@@ -1078,7 +1070,7 @@ function get_available_dates(watershed, subbasin, comid) {
 }
 
 
-function get_time_series(watershed, subbasin, streamcomid, stationcode, stationname,latitude, longitude, startdate) {
+function get_time_series(watershed, subbasin, streamcomid, stationcode, stationname, startdate) {
     $('#forecast-loading').removeClass('hidden');
     $('#forecast-chart').addClass('hidden');
     $('#dates').addClass('hidden');
@@ -1091,8 +1083,6 @@ function get_time_series(watershed, subbasin, streamcomid, stationcode, stationn
             'streamcomid': streamcomid,
             'stationcode': stationcode,
             'stationname': stationname,
-            'longitude': longitude,
-            'latitude': latitude,
             'startdate': startdate,
         },
         error: function() {
@@ -1127,8 +1117,6 @@ function get_time_series(watershed, subbasin, streamcomid, stationcode, stationn
                     streamcomid: streamcomid,
                     stationcode: stationcode,
                     stationname: stationname,
-                    longitude: longitude,
-                    latitude: latitude,
                     startdate: startdate,
                 };
 
@@ -1146,7 +1134,7 @@ function get_time_series(watershed, subbasin, streamcomid, stationcode, stationn
 
                 $('#download_forecast_ensemble').removeClass('hidden');
 
-                get_time_series_bc(watershed, subbasin, streamcomid, stationcode, stationname, latitude, longitude,startdate);
+                get_time_series_bc(watershed, subbasin, streamcomid, stationcode, stationname, startdate);
 
             } else if (data.error) {
             	$('#forecast-loading').addClass('hidden');
@@ -1165,7 +1153,7 @@ function get_time_series(watershed, subbasin, streamcomid, stationcode, stationn
     });
 }
 
-function get_time_series_bc(watershed, subbasin, streamcomid, stationcode, stationname, latitude, longitude,startdate) {
+function get_time_series_bc(watershed, subbasin, streamcomid, stationcode, stationname, startdate) {
     $('#forecast-bc-loading').removeClass('hidden');
     $('#forecast-bc-chart').addClass('hidden');
     $('#dates').addClass('hidden');
@@ -1178,8 +1166,6 @@ function get_time_series_bc(watershed, subbasin, streamcomid, stationcode, stati
             'streamcomid': streamcomid,
             'stationcode': stationcode,
             'stationname': stationname,
-            'longitude' : longitude,
-            'latitude' : latitude,
             'startdate': startdate,
         },
         error: function() {
@@ -1215,8 +1201,6 @@ function get_time_series_bc(watershed, subbasin, streamcomid, stationcode, stati
                     streamcomid: streamcomid,
                     stationcode: stationcode,
                     stationname: stationname,
-                    longitude: longitude,
-                    Latitude: latitude,
                     startdate: startdate,
                 };
 
