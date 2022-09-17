@@ -1091,7 +1091,7 @@ function get_time_series(watershed, subbasin, streamcomid, stationcode, stationn
             'streamcomid': streamcomid,
             'stationcode': stationcode,
             'stationname': stationname,
-            'longitude': longittude,
+            'longitude': longitude,
             'latitude': latitude,
             'startdate': startdate,
         },
