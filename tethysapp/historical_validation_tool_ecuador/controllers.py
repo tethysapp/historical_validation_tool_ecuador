@@ -102,12 +102,22 @@ def home(request):
         options=[(region_index2[opt]['name'], opt) for opt in region_index2]
     )
 
+    region_index3 = json.load(open(os.path.join(os.path.dirname(__file__), 'public', 'geojson3', 'index3.json')))
+    hidric = SelectInput(
+        display_text='Zoom to a Hydrographic Unit 3:',
+        name='hidric',
+        multiple=False,
+        original=True,
+        options=[(region_index3[opt]['name'], opt) for opt in region_index3]
+    )
+
     context = {
         "metric_loop_list": metric_loop_list,
         "geoserver_endpoint": geoserver_endpoint,
         "date_picker": date_picker,
         "regions": regions,
-        "basins": basins
+        "basins": basins,
+        "hidric": hidric
     }
 
     return render(request, 'historical_validation_tool_ecuador/home.html', context)
