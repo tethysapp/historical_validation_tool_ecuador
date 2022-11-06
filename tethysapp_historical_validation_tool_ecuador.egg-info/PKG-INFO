@@ -1,11 +1,8 @@
-Metadata-Version: 1.0
+Metadata-Version: 2.1
 Name: tethysapp-historical-validation-tool-ecuador
-Version: 1.1
+Version: 1.2
 Summary: This app combines the observed data and the simulated data from the GEOGloWS ECMWF Streaamflow Services in Ecuador.
-Home-page: UNKNOWN
-Author: Jorge Luis Sanchez-Lozano
-Author-email: jorgessanchez7@gmail.com
-License: UNKNOWN
-Description: UNKNOWN
+Home-page: 
+Author: Jorge Luis Sanchez-Lozano, Karina Larco
+Author-email: jorgessanchez7@gmail.com, karynina3@gmail.com
 Keywords: "Hydrology","Time Series","Bias Correction","Hydrostats","GEOGloWS","Historical Validation Tool","Ecuador"
-Platform: UNKNOWN

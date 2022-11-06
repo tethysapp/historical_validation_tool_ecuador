@@ -135,6 +135,25 @@ class HistoricalValidationToolEcuador(TethysAppBase):
                 url='get-forecast-ensemble-bc-data-csv',
                 controller='historical_validation_tool_ecuador.controllers.get_forecast_ensemble_bc_data_csv'
             ),
+            UrlMap(
+                name='user_manual',
+                url='historical-validation-tool-ecuador/user_manual',
+                controller='historical_validation_tool_ecuador.controllers.user_manual'
+            ),
+            UrlMap(
+                name='technical_manual',
+                url='historical-validation-tool-ecuador/technical_manual',
+                controller='historical_validation_tool_ecuador.controllers.technical_manual'
+            ),
+            ########################################################
+            ########################################################
+            UrlMap(
+                name='get_zoom_array',
+                url='get-zoom-array',
+                controller='historical_validation_tool_ecuador.controllers.get_zoom_array',
+            ),
+            ########################################################
+            ########################################################
         )
 
         return url_maps
